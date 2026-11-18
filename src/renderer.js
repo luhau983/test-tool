@@ -2,7 +2,7 @@
 'use strict';
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
-const {data,number,batteryHealth,licenseInfo,licenseExpiry,memoryDiagnosticInfo,stabilityInfo,firstUseInfo,officeInfo,mdmInfo,hardwareTruth,memoryInfo,usageInfo,ago,assess,CYCLE_WARN}=window.assessment;
+const {data,number,batteryHealth,licenseInfo,licenseExpiry,keyboardGuess,keyboardDevices,memoryDiagnosticInfo,stabilityInfo,firstUseInfo,officeInfo,mdmInfo,hardwareTruth,memoryInfo,usageInfo,ago,assess,CYCLE_WARN}=window.assessment;
 const {mediaError}=window.mediaErrors;
 const esc=value=>String(value ?? '—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Markup helpers. card()/note() take already-escaped HTML; finding()/stat() escape their own text.
@@ -21,7 +21,7 @@ const GiB=value=>Number.isFinite(Number(value)) && Number(value)>0 ? `${(Number(
 let scanReport=null, scanBusy=false,testBusy=false,fullRun=false,fullStep=-1,stopFull=false;
 let toastTimer,keyboardActive=false,audioContext,oscillator,cameraStream,micStream,recorder,micTimer,micURL,micFrame;
 const manualItems=[
- ['Cấu hình & Service Tag','Đối chiếu tin rao, vỏ máy, firmware và trang Dell.'],
+ ['Cấu hình & số serial','Đối chiếu tin rao, vỏ máy, firmware và trang hỗ trợ của hãng.'],
  ['Ngoại hình / bản lề / ốc','Kiểm tra móp, nứt, thiếu ốc, dấu tháo sửa, mùi khét / dấu nước.'],
  ['Màn hình / điểm chết','Xem đủ trắng, đen, đỏ, xanh lá, xanh dương, xám và lưới.'],
  ['Độ sáng / cáp màn / góc nhìn','Tăng giảm độ sáng, mở gập chậm; quan sát chớp và sọc.'],
@@ -40,7 +40,7 @@ const manualItems=[
  ['Sạc / jack sạc / công suất','F2: AC Adapter nhận đúng công suất; thử cắm/rút, kiểm tra lỏng.'],
  ['Pin / thời lượng / phồng','Rút sạc thử 10–15 phút, ghi % đầu/cuối; quan sát phồng / sập nguồn.'],
  ['Quạt / nhiệt / ổn định','Nghe tiếng quạt, kiểm tra nóng, treo và hiệu năng với tải thực tế.'],
- ['RAM / ổ đĩa / Dell ePSA','F12 → Diagnostics. Ghi mã lỗi / validation code nếu có.'],
+ ['RAM / ổ đĩa / chẩn đoán tích hợp','F12 → Diagnostics. Ghi mã lỗi / validation code nếu có.'],
  ['GPU / tác vụ đồ họa','Chạy ứng dụng 3D hoặc video thực tế, tìm artifact / mất hình. App không tự stress GPU.'],
  ['Sleep / wake / restart','Lưu công việc, thử ngủ / đánh thức, đóng nắp và khởi động lại.'],
  ['Cảm ứng / bút / vân tay','Thử từng chức năng nếu model có. Không tự kết luận từ tên thiết bị.'],
@@ -55,8 +55,8 @@ const pages={
   memory:['RAM','Từng khe RAM, loại, tốc độ, hãng, kênh đôi / đơn và khả năng nâng cấp — đọc từ bảng SMBIOS của BIOS.'],
   usage:['Sử dụng','Các lần bật máy, thời lượng dùng và thời gian Windows đã kích hoạt (theo nhật ký Windows).'],
   disks:['Ổ cứng','Sức khỏe S.M.A.R.T., nhiệt độ, tuổi thọ SSD và thử tốc độ ghi/đọc.'],
-  firmware:['BIOS / SMBIOS','Bảng firmware: model, Service Tag, BIOS, mainboard, CPU, khe RAM.'],
-  dell:['Tra Dell','Tra Service Tag qua website Dell hoặc TechDirect API.'],
+  firmware:['BIOS / SMBIOS','Bảng firmware: model, số serial, BIOS, mainboard, CPU, khe RAM.'],
+  warranty:['Tra bảo hành','Tra bảo hành theo số serial qua trang hỗ trợ của hãng hoặc API bảo hành.'],
   battery:['Pin & sạc','Độ chai theo firmware và mức tụt pin đo thực tế.'],
   screen:['Màn hình','Xem từng màu toàn màn hình để tìm điểm chết, sọc, hở sáng.'],
   input:['Bàn phím & chuột','Nhấn từng phím; vẽ, click và cuộn để thử touchpad.'],
@@ -65,7 +65,7 @@ const pages={
   checklist:['Biên bản','Ghi kết quả thử thực tế rồi xuất biên bản HTML.'],
   summary:['Kết quả lượt test','Thống kê lần Test toàn bộ gần nhất.']
 };
-const sectionLabels={windowsInfo:'Phiên bản Windows',antivirus:'Phần mềm diệt virus',accounts:'Tài khoản trên máy',hotfixes:'Bản cập nhật gần đây',activationHistory:'Lịch sử kiểm tra bản quyền',powerEvents:'Nhật ký bật / tắt máy',usageSessions:'Các lần sử dụng',license:'Bản quyền Windows',activation:'Dấu vết công cụ kích hoạt',os:'Hệ điều hành',gpu:'GPU / màn hình',battery:'Pin (powercfg)',batteryNow:'Pin hiện tại',disks:'Ổ đĩa vật lý',volumes:'Phân vùng',smartRaw:'S.M.A.R.T. ổ đĩa',diskHealth:'Sức khỏe ổ cứng (S.M.A.R.T.)',diskSmart:'Thuộc tính S.M.A.R.T.',network:'Card mạng',audio:'Thiết bị âm thanh',devices:'Camera, Bluetooth, màn hình, thiết bị lỗi',usb:'Thiết bị USB',security:'Secure Boot / TPM',events:'Nhật ký hệ thống (7 ngày)',firmwareInfo:'Nguồn bảng firmware',smbiosBIOS:'BIOS (Type 0)',smbiosSystem:'Model / Service Tag (Type 1)',smbiosBoard:'Mainboard (Type 2)',smbiosChassis:'Khung máy (Type 3)',smbiosCPU:'CPU (Type 4)',smbiosMemoryArray:'Số khe RAM (Type 16)',smbiosMemory:'Từng khe RAM (Type 17)',smbiosBattery:'Pin thiết kế (Type 22)',smbiosStructures:'Tất cả cấu trúc SMBIOS',dellBios:'Thiết lập BIOS Dell (WMI)'};
+const sectionLabels={windowsInfo:'Phiên bản Windows',antivirus:'Phần mềm diệt virus',accounts:'Tài khoản trên máy',hotfixes:'Bản cập nhật gần đây',activationHistory:'Lịch sử kiểm tra bản quyền',powerEvents:'Nhật ký bật / tắt máy',usageSessions:'Các lần sử dụng',license:'Bản quyền Windows',activation:'Dấu vết công cụ kích hoạt',os:'Hệ điều hành',gpu:'GPU / màn hình',battery:'Pin (powercfg)',batteryNow:'Pin hiện tại',disks:'Ổ đĩa vật lý',volumes:'Phân vùng',smartRaw:'S.M.A.R.T. ổ đĩa',diskHealth:'Sức khỏe ổ cứng (S.M.A.R.T.)',diskSmart:'Thuộc tính S.M.A.R.T.',network:'Card mạng',audio:'Thiết bị âm thanh',devices:'Camera, Bluetooth, màn hình, thiết bị lỗi',usb:'Thiết bị USB',security:'Secure Boot / TPM',events:'Nhật ký hệ thống (7 ngày)',firmwareInfo:'Nguồn bảng firmware',smbiosBIOS:'BIOS (Type 0)',smbiosSystem:'Model / số serial (Type 1)',smbiosBoard:'Mainboard (Type 2)',smbiosChassis:'Khung máy (Type 3)',smbiosCPU:'CPU (Type 4)',smbiosMemoryArray:'Số khe RAM (Type 16)',smbiosMemory:'Từng khe RAM (Type 17)',smbiosBattery:'Pin thiết kế (Type 22)',smbiosStructures:'Tất cả cấu trúc SMBIOS'};
 function toast(message){clearTimeout(toastTimer);$('#toastText').textContent=message;$('#toast').classList.remove('hidden');toastTimer=setTimeout(()=>$('#toast').classList.add('hidden'),7000);}
 function go(page){
   if(!pages[page])return;
@@ -129,8 +129,8 @@ function renderScan(){
   const {sys,bios,cpu,slots,installed,ramMiB}=firmwareIdentity(),battery=data(scanReport,'battery')[0],drives=data(scanReport,'disks');
   $('#machineName').textContent=sys.Product || 'Không đọc được model từ SMBIOS';
   const chip=(label,value)=>`<span class="badge bg-base-100 border-base-300 gap-1.5"><span class="muted">${label}</span>${esc(value)}</span>`;
-  $('#machineDetail').innerHTML=chip('Hãng',sys.Manufacturer || 'chưa xác định')+chip('Service Tag',sys.SerialNumber || 'chưa xác định')+chip('BIOS',`${bios.Version || '—'}${bios.ReleaseDate?` · ${bios.ReleaseDate}`:''}`)+'<span class="badge bg-primary/10 text-primary border-0">nguồn SMBIOS</span>';
-  if(!$('#dellTag').value)$('#dellTag').value=currentDellTag() || '';
+  $('#machineDetail').innerHTML=chip('Hãng',sys.Manufacturer || 'chưa xác định')+chip('Số serial',sys.SerialNumber || 'chưa xác định')+chip('BIOS',`${bios.Version || '—'}${bios.ReleaseDate?` · ${bios.ReleaseDate}`:''}`)+'<span class="badge bg-primary/10 text-primary border-0">nguồn SMBIOS</span>';
+  if(!$('#warrantyTag').value)$('#warrantyTag').value=currentSerial() || '';
   updateIdentity();
   $('#scanStamp').textContent='Quét lúc '+new Date(scanReport.collectedAt).toLocaleTimeString('vi-VN');
   const health=battery?batteryHealth(battery):null;
@@ -145,13 +145,14 @@ function renderScan(){
   const findings=assess(scanReport);
   $('#findingCount').textContent=`${findings.filter(f=>f.state==='warn').length} lưu ý · ${findings.filter(f=>f.state==='unknown').length} chưa rõ`;
   $('#findings').innerHTML=findings.length?findings.map(f=>finding(f.state,f.title,f.detail)).join(''):note('Không thấy cảnh báo từ dữ liệu đã đọc. Vẫn cần thử trực tiếp.');
-  const isFirmware=key=>key.startsWith('smbios') || ['firmwareInfo','dellBios'].includes(key);
-  $('#hardwareSections').innerHTML=Object.entries(scanReport.sections).filter(([key])=>!isFirmware(key) && !['firmwareRaw','smartRaw','diskSmart','powerEvents','usageSessions','office','mdm','hardwareTruth','stability','firstUse','memoryDiag'].includes(key)).map(([key,section])=>renderTable(key,section)).join('');
+  const isFirmware=key=>key.startsWith('smbios') || ['firmwareInfo'].includes(key);
+  $('#hardwareSections').innerHTML=Object.entries(scanReport.sections).filter(([key])=>!isFirmware(key) && !['firmwareRaw','smartRaw','diskSmart','powerEvents','usageSessions','office','mdm','hardwareTruth','stability','firstUse','memoryDiag','displays','keyboards'].includes(key)).map(([key,section])=>renderTable(key,section)).join('');
   $('#firmwareSections').innerHTML=Object.entries(scanReport.sections).filter(([key])=>isFirmware(key)).map(([key,section])=>renderTable(key,section)).join('') || card('Không đọc được bảng firmware.');
   renderBatterySpecs();
   renderDisks();
   renderUsageHistory();
   renderMemory();
+  renderKeyboard();
   Object.keys(SUMMARIES).forEach(renderSummary);
   renderWindows();
 }
@@ -167,50 +168,49 @@ function renderUsage(battery){
   ];
   $('#usageMetrics').innerHTML=rows.map(r=>stat(...r)).join('');
 }
-let dellConfigured=false,dellLast=null;
-function currentDellTag(){
+let warrantyConfigured=false,warrantyLast=null;
+function currentSerial(){
   const sys=data(scanReport,'smbiosSystem')[0];
-  if(!/dell/i.test(sys?.Manufacturer || ''))return null;
   const tag=String(sys.SerialNumber || '').trim().toUpperCase();
   return /^[A-Z0-9]{5,12}$/.test(tag)?tag:null;
 }
 function updateIdentity(){
-  const tag=currentDellTag(),maker=data(scanReport,'smbiosSystem')[0]?.Manufacturer;
-  $('#dellIdentity').textContent=tag?`Đọc từ SMBIOS: ${tag}`:maker && !/dell/i.test(maker)?`Máy này là ${maker}, không phải Dell. Nhập mã trên tem máy.`:'Chưa đọc được Service Tag Dell. Nhập mã trên tem máy.';
+  const tag=currentSerial(),maker=data(scanReport,'smbiosSystem')[0]?.Manufacturer;
+  $('#warrantyIdentity').textContent=tag?`Đọc từ SMBIOS: ${tag}`:'Chưa đọc được số serial từ BIOS. Nhập mã trên tem máy.';
   $('#useCurrentTag').disabled=!tag;
 }
-$('#useCurrentTag').addEventListener('click',()=>{const tag=currentDellTag();if(tag){$('#dellTag').value=tag;toast('Đã điền Service Tag đọc từ BIOS: '+tag);}});
-$('#dellConnect').addEventListener('click',async()=>{
-  try{const result=await window.inspect.dellConfigure({id:$('#dellClientId').value,secret:$('#dellSecret').value});dellConfigured=result.configured;$('#dellClientId').value='';$('#dellSecret').value='';$('#dellAuthStatus').textContent='Đã nạp khóa cho phiên này · nhấn tra để xác thực với Dell';toast('Khóa chỉ ở RAM của phiên hiện tại.');}catch(e){toast(e.message);}
+$('#useCurrentTag').addEventListener('click',()=>{const tag=currentSerial();if(tag){$('#warrantyTag').value=tag;toast('Đã điền số serial đọc từ BIOS: '+tag);}});
+$('#warrantyConnect').addEventListener('click',async()=>{
+  try{const result=await window.inspect.warrantyConfigure({id:$('#warrantyClientId').value,secret:$('#warrantySecret').value});warrantyConfigured=result.configured;$('#warrantyClientId').value='';$('#warrantySecret').value='';$('#warrantyAuthStatus').textContent='Đã nạp khóa cho phiên này · nhấn tra để xác thực';toast('Khóa chỉ ở RAM của phiên hiện tại.');}catch(e){toast(e.message);}
 });
-$('#dellClear').addEventListener('click',async()=>{await window.inspect.dellConfigure({clear:true});dellConfigured=false;$('#dellClientId').value='';$('#dellSecret').value='';$('#dellAuthStatus').textContent='Đã xóa khóa và token khỏi phiên.';});
-$('#supportFallback').addEventListener('click',()=>window.inspect.support($('#dellTag').value || undefined).catch(e=>toast(e.message)));
-async function lookupDell(){
-  $('#dellLookup').disabled=true;$('#dellResults').innerHTML='<p class="flex items-center gap-2 text-sm muted"><span class="loading loading-spinner loading-xs"></span>Đang kết nối Dell…</p>';
+$('#warrantyClear').addEventListener('click',async()=>{await window.inspect.warrantyConfigure({clear:true});warrantyConfigured=false;$('#warrantyClientId').value='';$('#warrantySecret').value='';$('#warrantyAuthStatus').textContent='Đã xóa khóa và token khỏi phiên.';});
+$('#supportFallback').addEventListener('click',()=>window.inspect.support($('#warrantyTag').value || undefined).catch(e=>toast(e.message)));
+async function lookupWarranty(){
+  $('#warrantyLookup').disabled=true;$('#warrantyResults').innerHTML='<p class="flex items-center gap-2 text-sm muted"><span class="loading loading-spinner loading-xs"></span>Đang kết nối…</p>';
   try{
-    if($('#dellMethod').value==='web'){
-      const result=await window.inspect.dellWebLookup($('#dellTag').value);
+    if($('#warrantyMethod').value==='web'){
+      const result=await window.inspect.warrantyWebLookup($('#warrantyTag').value);
       const match=result.matchesFirmware===true?'Mã gửi tra khớp firmware máy hiện tại.':result.matchesFirmware===false?'Mã gửi tra khác firmware máy hiện tại.':'Chưa có mã firmware để đối chiếu.';
-      dellLast={ok:true,at:result.queriedAt,via:'Dell website'};renderSummary('dell');
-      $('#dellResults').innerHTML=note(`${esc(match)} Phản hồi lúc ${esc(new Date(result.queriedAt).toLocaleString('vi-VN'))}. Các trường giữ nguyên như Dell trả; HTTP 200 chưa chắc là tìm thấy máy.`)+renderTable('Phản hồi Dell website',{status:'ok',data:result.fields});
+      warrantyLast={ok:true,at:result.queriedAt,via:'Trang hỗ trợ'};renderSummary('warranty');
+      $('#warrantyResults').innerHTML=note(`${esc(match)} Phản hồi lúc ${esc(new Date(result.queriedAt).toLocaleString('vi-VN'))}. Các trường giữ nguyên như hãng trả; HTTP 200 chưa chắc là tìm thấy máy.`)+renderTable('Phản hồi trang hỗ trợ',{status:'ok',data:result.fields});
       return result;
     }
-    const result=await window.inspect.dellLookup($('#dellTag').value);
-    const match=result.matchesFirmware===true?'Khớp Service Tag của máy này.':result.matchesFirmware===false?'Khác Service Tag của máy này — có thể đang tra máy khác.':'Chưa có Service Tag firmware để đối chiếu.';
-    dellLast={ok:true,at:result.asset.QueriedAt,via:'TechDirect API',warranty:result.entitlements?.length || 0};renderSummary('dell');
-    $('#dellResults').innerHTML=note(`${esc(match)} Tra lúc ${esc(new Date(result.asset.QueriedAt).toLocaleString('vi-VN'))}.`)+renderTable('Model / xuất xưởng',{status:'ok',data:[result.asset]})+renderTable('Dịch vụ bảo hành',{status:'ok',data:result.entitlements})+note('Khoảng ngày dịch vụ chưa xác nhận điều kiện bảo hành tại Việt Nam; hỏi Dell về chuyển quyền sở hữu.','warn');
-    $('#dellAuthStatus').textContent='Đã xác thực và nhận dữ liệu Dell trong phiên này.';return result;
-  }catch(e){dellLast={ok:false,error:e.message};renderSummary('dell');$('#dellResults').innerHTML=card(`<h3 class="panel-title mb-1">Chưa lấy được thông tin Dell</h3>${note(esc(e.message),'warn')}`);throw e;}
-  finally{$('#dellLookup').disabled=false;}
+    const result=await window.inspect.warrantyLookup($('#warrantyTag').value);
+    const match=result.matchesFirmware===true?'Khớp số serial của máy này.':result.matchesFirmware===false?'Khác số serial của máy này — có thể đang tra máy khác.':'Chưa có số serial firmware để đối chiếu.';
+    warrantyLast={ok:true,at:result.asset.QueriedAt,via:'API bảo hành',warranty:result.entitlements?.length || 0};renderSummary('warranty');
+    $('#warrantyResults').innerHTML=note(`${esc(match)} Tra lúc ${esc(new Date(result.asset.QueriedAt).toLocaleString('vi-VN'))}.`)+renderTable('Model / xuất xưởng',{status:'ok',data:[result.asset]})+renderTable('Dịch vụ bảo hành',{status:'ok',data:result.entitlements})+note('Khoảng ngày dịch vụ chưa xác nhận điều kiện bảo hành tại Việt Nam; hỏi hãng về chuyển quyền sở hữu.','warn');
+    $('#warrantyAuthStatus').textContent='Đã xác thực và nhận dữ liệu bảo hành trong phiên này.';return result;
+  }catch(e){warrantyLast={ok:false,error:e.message};renderSummary('warranty');$('#warrantyResults').innerHTML=card(`<h3 class="panel-title mb-1">Chưa lấy được thông tin bảo hành</h3>${note(esc(e.message),'warn')}`);throw e;}
+  finally{$('#warrantyLookup').disabled=false;}
 }
-$('#dellLookup').addEventListener('click',()=>lookupDell().catch(e=>toast(e.message)));
-function updateDellMethod(){
-  const web=$('#dellMethod').value==='web',panel=$('#dellClientId').closest('article');panel.classList.toggle('hidden',web);
-  $('#dellColumns').classList.toggle('grid-cols-2',!web);$('#dellColumns').classList.toggle('max-w-xl',web);
-  $('#dellLookup').textContent=web?'Tra trên website Dell':'Tra model & bảo hành';
+$('#warrantyLookup').addEventListener('click',()=>lookupWarranty().catch(e=>toast(e.message)));
+function updateWarrantyMethod(){
+  const web=$('#warrantyMethod').value==='web',panel=$('#warrantyClientId').closest('article');panel.classList.toggle('hidden',web);
+  $('#warrantyColumns').classList.toggle('grid-cols-2',!web);$('#warrantyColumns').classList.toggle('max-w-xl',web);
+  $('#warrantyLookup').textContent=web?'Tra trên trang hỗ trợ':'Tra model & bảo hành';
 }
-$('#dellMethod').addEventListener('change',updateDellMethod);updateDellMethod();
-$('#openDellBrowser').addEventListener('click',()=>window.inspect.dellWebBrowser($('#dellTag').value || undefined).catch(e=>toast(e.message)));
+$('#warrantyMethod').addEventListener('change',updateWarrantyMethod);updateWarrantyMethod();
+$('#openWarrantyBrowser').addEventListener('click',()=>window.inspect.warrantyBrowserOpen($('#warrantyTag').value || undefined).catch(e=>toast(e.message)));
 // ---- Ổ cứng: per-drive S.M.A.R.T. view (decoded in the main process by disk-health.cjs) ----
 let diskIndex=0;
 const bytesText=value=>value==null?'—':value>=1e12?`${(value/1e12).toFixed(2)} TB`:`${Math.round(value/1e9)} GB`;
@@ -263,13 +263,21 @@ function speedSparkline(samples){
   const points=samples.map((v,i)=>`${(i*step).toFixed(1)},${(h-4-(v/max)*(h-12)).toFixed(1)}`).join(' ');
   return `<div class="mt-3"><p class="text-xs muted mb-1">Tốc độ ghi theo thời gian (đỉnh ${max} MB/s): tụt mạnh giữa chừng là lúc bộ đệm nhanh của SSD đã đầy.</p><svg class="w-full h-14 text-primary" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Tốc độ ghi theo thời gian"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>`;
 }
+const VERDICT_TONE={good:['bg-emerald-50 text-emerald-700','check','tone-ok'],caution:['bg-amber-50 text-amber-700','warn','tone-warn'],bad:['bg-red-50 text-red-700','warn','tone-warn'],unknown:['bg-base-200 text-base-content/70','help','muted']};
+function speedVerdict(v){
+  if(!v)return '';
+  const [badge,ico]=VERDICT_TONE[v.status] || VERDICT_TONE.unknown;
+  return `<div class="mt-3 pt-3 border-t border-base-300"><div class="flex flex-wrap items-center gap-2"><span class="badge border-0 gap-1.5 ${badge}">${icon(ico)}Đánh giá: ${esc(v.label)}</span><span class="text-sm">${esc(v.summary)}</span></div>
+    <ul class="mt-2 space-y-1">${v.points.map(p=>`<li class="text-xs flex gap-1.5 ${VERDICT_TONE[p.state]?.[2] || ''}">${icon(VERDICT_TONE[p.state]?.[1] || 'info')}<span>${esc(p.text)}</span></li>`).join('')}</ul>
+    ${v.expected?`<p class="text-xs muted mt-1.5">Mức tham chiếu: ${esc(v.expected)} (bài thử 1 luồng nên thấp hơn số quảng cáo).</p>`:''}</div>`;
+}
 function testStrip(d){
   const drive=firstLetter(d),last=drive?diskTests[drive]:null,running=diskTestDrive===drive;
   const result=running?'<span class="text-xs muted" id="diskTestStatus">Đang chuẩn bị…</span>'
     :last?.metrics?`<span class="text-sm tabular"><b>${last.metrics.writeMBps}</b> MB/s ghi${last.metrics.minWriteMBps!=null?` <span class="muted text-xs">(thấp nhất ${last.metrics.minWriteMBps})</span>`:''} · <b>${last.metrics.readMBps}</b> MB/s đọc <span class="muted text-xs">· ${esc(sizeLabel(last.metrics.sizeMiB || 256))}</span></span>`
     :last?`<span class="text-xs tone-warn">${esc(last.detail)}</span>`:'<span class="text-xs muted">Chưa thử</span>';
   const disabled=!drive || testBusy || scanBusy || fullRun;
-  return `<article class="panel py-3.5"><div class="flex flex-wrap items-center gap-x-4 gap-y-2"><span class="icon-tile ${TILE.drive}">${icon('zap')}</span><div class="flex-1 min-w-48"><h3 class="panel-title">Thử ghi / đọc ${drive?`ổ ${esc(drive)}`:'ổ'}</h3><p class="text-xs muted mt-0.5" id="diskTestHint">${drive?`Ghi tệp tạm ${sizeLabel(diskTestSize)} thẳng xuống ổ, đo tốc độ theo thời gian, đọc lại so SHA-256 rồi xóa ngay.`:'Ổ không có ký tự ổ đĩa nên không thử ghi được.'}</p></div>${result}<select class="select select-sm w-40" data-disk-size aria-label="Dung lượng tệp thử" ${running?'disabled':''}>${sizeOptions()}</select>${running?`<button class="btn btn-sm btn-quiet shrink-0" id="diskTestStop">${icon('stop')}Dừng</button>`:`<button class="btn btn-sm btn-primary shrink-0" id="diskTestRun" data-drive="${drive}" ${disabled?'disabled':''}>${icon('play')}Thử ngay</button>`}</div>${running?'<progress class="progress progress-primary w-full mt-3" id="diskTestProgress" value="0" max="100"></progress>':speedSparkline(last?.metrics?.samples)}</article>`;
+  return `<article class="panel py-3.5"><div class="flex flex-wrap items-center gap-x-4 gap-y-2"><span class="icon-tile ${TILE.drive}">${icon('zap')}</span><div class="flex-1 min-w-48"><h3 class="panel-title">Thử ghi / đọc ${drive?`ổ ${esc(drive)}`:'ổ'}</h3><p class="text-xs muted mt-0.5" id="diskTestHint">${drive?`Ghi tệp tạm ${sizeLabel(diskTestSize)} thẳng xuống ổ, đo tốc độ theo thời gian, đọc lại so SHA-256 rồi xóa ngay.`:'Ổ không có ký tự ổ đĩa nên không thử ghi được.'}</p></div>${result}<select class="select select-sm w-40" data-disk-size aria-label="Dung lượng tệp thử" ${running?'disabled':''}>${sizeOptions()}</select>${running?`<button class="btn btn-sm btn-quiet shrink-0" id="diskTestStop">${icon('stop')}Dừng</button>`:`<button class="btn btn-sm btn-primary shrink-0" id="diskTestRun" data-drive="${drive}" ${disabled?'disabled':''}>${icon('play')}Thử ngay</button>`}</div>${running?'<progress class="progress progress-primary w-full mt-3" id="diskTestProgress" value="0" max="100"></progress>':speedSparkline(last?.metrics?.samples)}${!running && last?.verdict?speedVerdict(last.verdict):''}</article>`;
 }
 function renderDisks(){
   const disks=scanReport?.diskDetails || [];
@@ -366,18 +374,18 @@ const SUMMARIES={
   },
   firmware:()=>{
     if(!scanReport)return null;
-    const {sys,bios}=firmwareIdentity(),info=data(scanReport,'firmwareInfo')[0] || {},truth=hardwareTruth(scanReport),dell=data(scanReport,'dellBios');
+    const {sys,bios}=firmwareIdentity(),info=data(scanReport,'firmwareInfo')[0] || {},truth=hardwareTruth(scanReport);
     return [stat('Máy',sys.Product || '—',[sys.Manufacturer,sys.SerialNumber?`Tag ${sys.SerialNumber}`:''].filter(Boolean).join(' · '),'chip'),
       stat('BIOS',bios.Version || '—',bios.ReleaseDate?`Phát hành ${bios.ReleaseDate}`:'','calendar'),
       stat('Bảng SMBIOS',info.Version?`Phiên bản ${info.Version}`:'—',info.Structures?`${info.Structures} cấu trúc · ${info.Bytes} byte`:'','info'),
-      stat('Khóa OEM trong BIOS',truth.oemKeyTail?'Có':'Không có',truth.oemKeyTail?`•••••-${truth.oemKeyTail} (bảng ACPI MSDM)`:dell.length?`${dell.length} thiết lập Dell đọc được`:'Máy không kèm Windows bản quyền OEM','shield')];
+      stat('Khóa OEM trong BIOS',truth.oemKeyTail?'Có':'Không có',truth.oemKeyTail?`•••••-${truth.oemKeyTail} (bảng ACPI MSDM)`:'Máy không kèm Windows bản quyền OEM','shield')];
   },
-  dell:()=>{
+  warranty:()=>{
     const {sys}=scanReport?firmwareIdentity():{sys:{}};
-    const last=!dellLast?['Chưa tra','Bấm Tra cứu để hỏi Dell','globe']:dellLast.ok?['Đã tra',`${dellLast.via} · ${new Date(dellLast.at).toLocaleString('vi-VN')}${dellLast.warranty!=null?` · ${dellLast.warranty} dịch vụ bảo hành`:''}`,'check']:['Lỗi',dellLast.error,'warn'];
-    return [stat('Service Tag (BIOS)',sys.SerialNumber || '—',/dell/i.test(sys.Manufacturer || '')?'Đọc từ SMBIOS':'Máy không phải Dell?','chip'),
+    const last=!warrantyLast?['Chưa tra','Bấm Tra cứu để tra bảo hành','globe']:warrantyLast.ok?['Đã tra',`${warrantyLast.via} · ${new Date(warrantyLast.at).toLocaleString('vi-VN')}${warrantyLast.warranty!=null?` · ${warrantyLast.warranty} dịch vụ bảo hành`:''}`,'check']:['Lỗi',warrantyLast.error,'warn'];
+    return [stat('Số serial (BIOS)',sys.SerialNumber || '—',sys.SerialNumber?'Đọc từ SMBIOS':'BIOS không ghi số serial','chip'),
       stat('Model',sys.Product || '—',sys.Family || '','cpu'),
-      stat('Cách tra',$('#dellMethod')?.selectedOptions[0]?.textContent || '—',dellConfigured?'Đã nhập khóa TechDirect':'Chưa nhập khóa TechDirect','globe'),
+      stat('Cách tra',$('#warrantyMethod')?.selectedOptions[0]?.textContent || '—',warrantyConfigured?'Đã nhập khóa API bảo hành':'Chưa nhập khóa API bảo hành','globe'),
       stat('Kết quả',last[0],last[1],last[2])];
   },
   screen:()=>{
@@ -385,7 +393,7 @@ const SUMMARIES={
     const panels=data(scanReport,'devices').filter(d=>d.PNPClass==='Monitor').map(d=>d.Name);
     return [stat('Độ phân giải',`${Math.round(screen.width*dpr)} × ${Math.round(screen.height*dpr)}`,`Đang hiển thị ${screen.width} × ${screen.height} điểm`,'monitor'),
       stat('Tần số quét',g.CurrentRefreshRate?`${g.CurrentRefreshRate} Hz`:'—',g.Name || '','zap'),
-      stat('Tỉ lệ hiển thị',`${Math.round(dpr*100)}%`,panels.join(' · ') || 'Màn hình','info'),
+      stat('Tỉ lệ hiển thị',`${Math.round(dpr*100)}%`,[scanReport && keyboardGuess(scanReport).panelInches?`Màn hình ${keyboardGuess(scanReport).panelInches.toLocaleString('vi-VN')}"`:'',...panels].filter(Boolean).join(' · ') || 'Màn hình','info'),
       stat('Điểm nghi ngờ',`${pixelMarks.length} vị trí`,pixelMarks.length?'Sẽ ghi vào biên bản':'Chưa đánh dấu',pixelMarks.length?'warn':'check')];
   },
   input:()=>{
@@ -537,7 +545,7 @@ $('#export').addEventListener('click',exportReport);$('#exportBottom').addEventL
 let runLog=null;
 const evidence={camera:false,mic:false};
 const RUN_STATUS={pass:'Đạt',fail:'Có lỗi',skip:'Bỏ qua'};
-const diagStatus=result=>result?.cancelled?'skip':result?.state==='completed'?'pass':result?.state==='cancelled'?'skip':'fail';
+const diagStatus=result=>result?.cancelled?'skip':result?.state==='completed'?(result.verdict?.status==='bad'?'fail':'pass'):result?.state==='cancelled'?'skip':'fail';
 const fullSteps=[
  {title:'Quét cấu hình / SMBIOS',detail:'Đọc firmware, Windows, bản quyền và ổ đĩa.',page:'overview',run:async()=>{
    await runScan();const f=assess(scanReport);
@@ -550,10 +558,10 @@ const fullSteps=[
    if(disks.some(d=>['bad','caution'].includes(d.health.status)))return {status:'fail',detail};
    return {status:disks.every(d=>d.health.status==='unknown')?'skip':'pass',detail};
  }},
- {title:'Tra Service Tag trên Dell',detail:'Chỉ chạy khi bật “Tra trong lượt Test toàn bộ”.',page:'overview',run:async()=>{
-   if(!$('#dellInFull').checked)return {status:'skip',detail:'Không bật tra Dell trong lượt test.'};
-   if($('#dellMethod').value==='techdirect' && !dellConfigured)return {status:'skip',detail:'Chưa nạp khóa TechDirect.'};
-   try{await lookupDell();return {status:'pass',detail:'Đã nhận phản hồi từ Dell.'};}catch(e){return {status:'fail',detail:e.message};}
+ {title:'Tra bảo hành theo số serial',detail:'Chỉ chạy khi bật “Tra trong lượt Test toàn bộ”.',page:'overview',run:async()=>{
+   if(!$('#warrantyInFull').checked)return {status:'skip',detail:'Không bật tra bảo hành trong lượt test.'};
+   if($('#warrantyMethod').value==='api' && !warrantyConfigured)return {status:'skip',detail:'Chưa nạp khóa API bảo hành.'};
+   try{await lookupWarranty();return {status:'pass',detail:'Đã nhận phản hồi bảo hành.'};}catch(e){return {status:'fail',detail:e.message};}
  }},
  {title:'CPU · tải 1 luồng 15 giây',detail:'Quan sát quạt, phản hồi và nhiệt.',page:'diagnostics',run:async()=>{const r=await runTest('cpu');return {status:diagStatus(r),detail:r.detail || ''};}},
  {title:'RAM · vùng nhớ 64 MiB',detail:'Ghi và xác minh 4 mẫu dữ liệu.',page:'diagnostics',run:async()=>{const r=await runTest('memory');return {status:diagStatus(r),detail:r.detail || ''};}},
@@ -636,7 +644,7 @@ function renderRunSummary(){
   $('#runSteps').innerHTML=runLog.steps.map(s=>`<tr><td class="w-8"><span class="${s.status==='pass'?'tone-done':s.status==='fail'?'tone-warn':'tone-unknown'}">${icon(s.status==='pass'?'check':s.status==='fail'?'warn':'help')}</span></td><td class="font-medium">${esc(s.title)}</td><td class="text-xs muted">${esc(s.detail)}</td><td><span class="badge badge-sm border-0 ${RUN_BADGE[s.status]}">${RUN_STATUS[s.status]}</span></td></tr>`).join('') || '<tr><td class="muted text-sm">Chưa có bước nào hoàn thành.</td></tr>';
   const {sys,bios,cpu,ramMiB,installed,slots}=firmwareIdentity(),license=licenseInfo(scanReport),usage=usageInfo(scanReport),battery=data(scanReport,'battery')[0],findings=assess(scanReport);
   const health=battery?batteryHealth(battery):null,drives=data(scanReport,'disks');
-  const rows=[['Model',sys.Product],['Service Tag',sys.SerialNumber],['BIOS',bios.Version?`${bios.Version}${bios.ReleaseDate?` · ${bios.ReleaseDate}`:''}`:null],['CPU',cpu.Version],['RAM',ramMiB?`${GiB(ramMiB*1048576)} · ${installed.length}/${slots.length} khe`:null],['Ổ đĩa',(scanReport.diskDetails || []).map(d=>`${d.model} (${GiB(d.capacity)})`).join(', ') || null],['Bản quyền Windows',`${license.label}${license.channel?` · ${license.channel}`:''}`],['Windows cài đặt',usage.windowsInstalled?`${usage.windowsInstalled} (${ago(usage.windowsDays)})`:null],['Pin',battery?`${health.wear!=null?`chai ${health.wear.toFixed(1)}%`:'chưa rõ độ chai'} · ${number(battery.CycleCount) ?? 'chưa rõ'} chu kỳ`:'Không có số liệu pin'],['Điểm cần chú ý',`${findings.filter(f=>f.state==='warn').length} lưu ý · ${findings.filter(f=>f.state==='unknown').length} chưa rõ`]];
+  const rows=[['Model',sys.Product],['Số serial',sys.SerialNumber],['BIOS',bios.Version?`${bios.Version}${bios.ReleaseDate?` · ${bios.ReleaseDate}`:''}`:null],['CPU',cpu.Version],['RAM',ramMiB?`${GiB(ramMiB*1048576)} · ${installed.length}/${slots.length} khe`:null],['Ổ đĩa',(scanReport.diskDetails || []).map(d=>`${d.model} (${GiB(d.capacity)})`).join(', ') || null],['Bản quyền Windows',`${license.label}${license.channel?` · ${license.channel}`:''}`],['Windows cài đặt',usage.windowsInstalled?`${usage.windowsInstalled} (${ago(usage.windowsDays)})`:null],['Pin',battery?`${health.wear!=null?`chai ${health.wear.toFixed(1)}%`:'chưa rõ độ chai'} · ${number(battery.CycleCount) ?? 'chưa rõ'} chu kỳ`:'Không có số liệu pin'],['Điểm cần chú ý',`${findings.filter(f=>f.state==='warn').length} lưu ý · ${findings.filter(f=>f.state==='unknown').length} chưa rõ`]];
   $('#runMachine').innerHTML=rows.map(([k,v])=>`<div class="flex justify-between gap-4 py-2 border-t border-base-300 first:border-0"><span class="muted text-xs shrink-0">${esc(k)}</span><span class="text-sm text-right break-words min-w-0">${esc(v || 'Chưa xác định')}</span></div>`).join('');
   const left=manualItems.filter(m=>m.status==='Chưa thử').length;
   $('#runChecklist').textContent=left?`Biên bản còn ${left}/${manualItems.length} mục chưa thử (cổng, mạng, sạc, BIOS…).`:'Biên bản đã điền đủ.';
@@ -672,17 +680,61 @@ $('#autoPixels').addEventListener('click',async()=>{
 });
 $('#clearPixelMarks').addEventListener('click',()=>{pixelMarks.length=0;renderPixelMarks();});renderPixelMarks();
 // Keyboard visualizer: only captures while explicitly active, outside text fields.
-const rows=[
- ['Escape:Esc','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','PrintScreen:PrtSc','Delete:Del'],
- ['Backquote:`','Digit1:1','Digit2:2','Digit3:3','Digit4:4','Digit5:5','Digit6:6','Digit7:7','Digit8:8','Digit9:9','Digit0:0','Minus:-','Equal:=','Backspace:⌫'],
- ['Tab','KeyQ:Q','KeyW:W','KeyE:E','KeyR:R','KeyT:T','KeyY:Y','KeyU:U','KeyI:I','KeyO:O','KeyP:P','BracketLeft:[','BracketRight:]','Backslash:∖'],
- ['CapsLock:Caps','KeyA:A','KeyS:S','KeyD:D','KeyF:F','KeyG:G','KeyH:H','KeyJ:J','KeyK:K','KeyL:L','Semicolon:;','Quote:′','Enter:Enter'],
- ['ShiftLeft:Shift L','KeyZ:Z','KeyX:X','KeyC:C','KeyV:V','KeyB:B','KeyN:N','KeyM:M','Comma:,','Period:.','Slash:/','ShiftRight:Shift R','ArrowUp:↑'],
- ['ControlLeft:Ctrl L','MetaLeft:Win L','AltLeft:Alt L','Space:Space','AltRight:Alt R','MetaRight:Win R','ContextMenu:Menu','ControlRight:Ctrl R','ArrowLeft:←','ArrowDown:↓','ArrowRight:→'],
- ['Insert:Ins','Home','End','PageUp:PgUp','PageDown:PgDn','NumLock:Num','NumpadDivide:Num /','NumpadMultiply:Num *','NumpadSubtract:Num -','NumpadAdd:Num +'],
- ['Numpad0:Num 0','Numpad1:Num 1','Numpad2:Num 2','Numpad3:Num 3','Numpad4:Num 4','Numpad5:Num 5','Numpad6:Num 6','Numpad7:Num 7','Numpad8:Num 8','Numpad9:Num 9','NumpadDecimal:Num .','NumpadEnter:Num ↵']
+// Laptop-style main block plus an optional number pad. Each key: "Code:label:width" (width in key units).
+const KB_MAIN=[
+ ['Escape:Esc','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','PrintScreen:PrtSc','Insert:Ins','Delete:Del'],
+ ['Backquote:`','Digit1:1','Digit2:2','Digit3:3','Digit4:4','Digit5:5','Digit6:6','Digit7:7','Digit8:8','Digit9:9','Digit0:0','Minus:-','Equal:=','Backspace::2'],
+ ['Tab::1.5','KeyQ:Q','KeyW:W','KeyE:E','KeyR:R','KeyT:T','KeyY:Y','KeyU:U','KeyI:I','KeyO:O','KeyP:P','BracketLeft:[','BracketRight:]','Backslash:\\:1.5'],
+ ['CapsLock:Caps:1.75','KeyA:A','KeyS:S','KeyD:D','KeyF:F','KeyG:G','KeyH:H','KeyJ:J','KeyK:K','KeyL:L','Semicolon:;','Quote:\'','Enter:Enter:2.25'],
+ ['ShiftLeft:Shift:2.25','KeyZ:Z','KeyX:X','KeyC:C','KeyV:V','KeyB:B','KeyN:N','KeyM:M','Comma:,','Period:.','Slash:/','ShiftRight:Shift:1.75','ArrowUp:↑'],
+ ['ControlLeft:Ctrl:1.25','MetaLeft:Win:1.25','AltLeft:Alt:1.25','Space:Space:5.5','AltRight:Alt','ContextMenu:Menu','ControlRight:Ctrl','ArrowLeft:←','ArrowDown:↓','ArrowRight:→'],
 ];
-$('#keyboard').innerHTML=rows.map(row=>`<div class="key-row">${row.map(key=>{const [code,label]=key.split(':');return `<span class="key" data-code="${code}" style="${code==='Space'?'flex:4':''}">${esc(label || code)}</span>`;}).join('')}</div>`).join('');
+const KB_NAV=['Home','End','PageUp:PgUp','PageDown:PgDn'];
+// Number pad on a 4 × 5 grid: [code, label, column, row, colSpan, rowSpan].
+const KB_PAD=[['NumLock','Num',1,1],['NumpadDivide','/',2,1],['NumpadMultiply','*',3,1],['NumpadSubtract','-',4,1],
+ ['Numpad7','7',1,2],['Numpad8','8',2,2],['Numpad9','9',3,2],['NumpadAdd','+',4,2,1,2],['Numpad4','4',1,3],['Numpad5','5',2,3],['Numpad6','6',3,3],
+ ['Numpad1','1',1,4],['Numpad2','2',2,4],['Numpad3','3',3,4],['NumpadEnter','↵',4,4,1,2],['Numpad0','0',1,5,2,1],['NumpadDecimal','.',3,5]];
+let kbChoice=(()=>{try{return ['auto','compact','full'].includes(localStorage.getItem('kbLayout'))?localStorage.getItem('kbLayout'):'auto';}catch{return 'auto';}})();
+let kbLabels=null; // code → character for the keyboard layout Windows is using (AZERTY, QWERTZ…)
+const kbLayoutNow=()=>kbChoice!=='auto'?kbChoice:scanReport?keyboardGuess(scanReport).layout:'compact';
+function keyCap(spec){
+  const [code,label,width]=spec.split(':'),mapped=kbLabels?.get(code);
+  // Only printable keys take the Windows layout's character; names (Tab, Shift…) stay as written.
+  const text=mapped && /^(Key|Digit|Minus|Equal|Bracket|Backslash|Semicolon|Quote|Comma|Period|Slash|Backquote|IntlBackslash)/.test(code)?mapped.toUpperCase():(label || code);
+  return `<span class="key" data-code="${code}" style="flex:${width || 1}">${esc(text)}</span>`;
+}
+function renderKeyboard(){
+  const seen=new Set($$('.key.seen').map(el=>el.dataset.code)),full=kbLayoutNow()==='full';
+  const main=KB_MAIN.map((row,i)=>`<div class="key-row">${(i===0 && full?[...row,...KB_NAV]:row).map(keyCap).join('')}</div>`).join('');
+  const pad=full?`<div class="key-pad">${KB_PAD.map(([code,label,c,r,cs=1,rs=1])=>`<span class="key" data-code="${code}" style="grid-column:${c} / span ${cs};grid-row:${r+1} / span ${rs}">${esc(label)}</span>`).join('')}</div>`:'';
+  $('#keyboard').innerHTML=`<div class="key-board ${full?'with-pad':''}"><div class="key-main">${main}</div>${pad}</div>`;
+  $$('.key').forEach(el=>{if(seen.has(el.dataset.code))el.classList.add('seen');});
+  const guess=scanReport?keyboardGuess(scanReport):null;
+  $('#kbInfo').textContent=[kbChoice==='auto'?(guess?`Tự nhận: ${full?'có phím số':'không phím số'}. ${guess.reason}`:'Tự nhận sau khi quét xong.'):`Đang dùng kiểu chọn tay: ${full?'có phím số':'laptop, không phím số'}.`,
+    kbLabels?'Chữ trên phím theo bố cục bàn phím Windows đang dùng.':'Chưa đọc được bố cục bàn phím của Windows; chữ trên phím theo kiểu US.',
+    'Phím Fn và phím nguồn không gửi tín hiệu tới Windows nên không thử được ở đây.'].join(' ');
+  $('#kbLayout').value=kbChoice;
+  renderKeyboardDevices();
+  renderSummary('input');
+}
+let kbDeviceList=null,kbDeviceBusy=false; // null: use the scan; array: refreshed with "Dò lại"
+function renderKeyboardDevices(){
+  const list=kbDeviceList || (scanReport?data(scanReport,'keyboards'):null);
+  if(!list){$('#kbDevices').innerHTML='';return;}
+  const k=keyboardDevices(list),ICON={builtin:'keyboard',usb:'cpu',bluetooth:'globe',other:'help'};
+  $('#kbDevices').innerHTML=`<div class="border-t border-base-300 pt-3 space-y-2"><div class="flex items-center gap-2"><span class="text-sm font-medium">Bàn phím đang kết nối</span><span class="text-xs muted tabular">${k.devices.length}</span><button class="btn btn-xs btn-ghost ml-auto" id="kbRefresh" ${kbDeviceBusy?'disabled':''}>${icon('refresh')}${kbDeviceBusy?'Đang dò…':'Dò lại'}</button></div>
+    ${k.warning?note(esc(k.warning),'warn'):''}
+    ${k.devices.length?`<div class="flex flex-wrap gap-2">${k.devices.map(d=>`<span class="badge badge-lg border-base-300 bg-base-100 gap-1.5 ${d.ok?'':'tone-warn'}">${icon(ICON[d.kind] || 'help')}<span class="text-xs muted">${esc(d.label)}</span>${d.name || d.vidPid?`<span class="text-xs">${esc(d.name || d.vidPid)}</span>`:''}${d.ok?'':' · lỗi'}</span>`).join('')}</div>`:'<p class="text-xs muted">Windows không thấy bàn phím nào.</p>'}</div>`;
+}
+document.addEventListener('click',async event=>{
+  if(!event.target.closest('#kbRefresh') || kbDeviceBusy)return;
+  kbDeviceBusy=true;renderKeyboardDevices();
+  try{kbDeviceList=await window.inspect.listKeyboards();}catch(e){toast(e.message);}
+  finally{kbDeviceBusy=false;renderKeyboardDevices();}
+});
+$('#kbLayout').addEventListener('change',event=>{kbChoice=event.target.value;try{localStorage.setItem('kbLayout',kbChoice);}catch{}renderKeyboard();});
+(async()=>{try{if(navigator.keyboard?.getLayoutMap)kbLabels=await navigator.keyboard.getLayoutMap();}catch{}renderKeyboard();})();
+renderKeyboard();
 function setKeyboard(active){keyboardActive=active;$('#keyboardToggle').textContent=active?'Dừng thử phím':'Bắt đầu thử phím';$('#lastKey').textContent=active?'Đang nhận phím · Esc để dừng':'Đã ngừng nhận phím';$$('.key.pressed').forEach(el=>el.classList.remove('pressed'));if(active)$('#keyboard').focus();}
 $('#keyboardToggle').addEventListener('click',()=>setKeyboard(!keyboardActive));
 $('#clearKeys').addEventListener('click',()=>{$$('.key').forEach(el=>el.classList.remove('seen','pressed'));renderSummary('input');});
@@ -690,7 +742,9 @@ document.addEventListener('keydown',event=>{
   if(!$('#screenOverlay').classList.contains('hidden')){event.preventDefault();if(event.key==='Escape')closeScreen();else if(['ArrowRight','ArrowLeft',' '].includes(event.key)){colorIndex=(colorIndex+(event.key==='ArrowLeft'?-1:1)+colors.length)%colors.length;paintColor();}return;}
   if(!keyboardActive && event.ctrlKey && !event.altKey && event.key.toLowerCase()==='b'){event.preventDefault();toggleSidebar();return;}
   if(!keyboardActive || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(event.target.tagName))return;
-  event.preventDefault();const key=$$('[data-code]').find(el=>el.dataset.code===event.code);key?.classList.add('seen','pressed');renderSummary('input');$('#lastKey').textContent=`Nhận: ${event.code} · ${event.key} · ${event.repeat?'đang giữ':'nhấn'}`;if(event.key==='Escape')setKeyboard(false);
+  event.preventDefault();
+  if(event.code.startsWith('Numpad') && !$$('[data-code]').some(el=>el.dataset.code===event.code) && kbChoice==='auto'){kbChoice='full';renderKeyboard();toast('Bàn phím có phím số: đã chuyển sang kiểu có phím số.');}
+  const key=$$('[data-code]').find(el=>el.dataset.code===event.code);key?.classList.add('seen','pressed');renderSummary('input');$('#lastKey').textContent=`Nhận: ${event.code} · ${event.key} · ${event.repeat?'đang giữ':'nhấn'}`;if(event.key==='Escape')setKeyboard(false);
 },true);
 document.addEventListener('keyup',event=>{$$('[data-code]').find(el=>el.dataset.code===event.code)?.classList.remove('pressed');});
 window.addEventListener('blur',()=>{$$('.key.pressed').forEach(el=>el.classList.remove('pressed'));});
@@ -738,7 +792,7 @@ async function runTest(kind,drive){
     lastTests[kind]=result;
     if(result.cancelled){$('#testStatus').textContent='Đã dừng trước khi chạy.';return result;}
     $('#testProgress').value=result.state==='completed'?100:0;$('#testStatus').textContent=result.state==='completed'?'Bài thử đã hoàn thành trong phạm vi mô tả.':'Bài thử không hoàn thành / có lỗi.';
-    $('#testResults').insertAdjacentHTML('afterbegin',finding(result.state==='completed'?'done':'warn',result.title,result.detail));return result;
+    $('#testResults').insertAdjacentHTML('afterbegin',finding(result.state==='completed' && !['bad','caution'].includes(result.verdict?.status)?'done':'warn',result.title,result.detail));return result;
   }finally{testBusy=false;updateLocks();renderSummary('diagnostics');if(kind.startsWith('memory'))renderMemory();if(kind==='disk'){diskTestDrive=null;renderDisks();}}
 }
 $('#stopTest').addEventListener('click',()=>window.inspect.stop().catch(e=>toast(e.message)));
@@ -813,5 +867,5 @@ $('#refreshBattery').addEventListener('click',()=>refreshBattery().catch(e=>toas
 $('#startBattery').addEventListener('click',async()=>{const button=$('#startBattery');button.disabled=true;try{renderBatteryPayload(await window.inspect.batteryStart(Number($('#batteryDuration').value)));toast('Đã bắt đầu ghi mức pin. Giữ điều kiện thử ổn định.');}catch(e){button.disabled=false;toast(e.message);$('#batteryTestStatus').textContent=e.message;}});
 $('#stopBattery').addEventListener('click',()=>window.inspect.batteryStop().then(renderBatteryPayload).catch(e=>toast(e.message)));
 window.inspect.onBatteryUpdate(renderBatteryPayload);
-// Bootstrap with real hardware, never with a sample Service Tag or a cached identity.
+// Bootstrap with real hardware, never with a sample serial number or a cached identity.
 runScan().catch(error=>{updateIdentity();toast('Chưa tự đọc được cấu hình: '+error.message);});

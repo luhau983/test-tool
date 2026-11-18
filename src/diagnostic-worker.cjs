@@ -22,7 +22,7 @@ try {
       for(let i=0;i<buffer.length;i++)if(buffer[i]!==pattern)throw Error(`Dữ liệu RAM sai ở byte ${i}`);
       progress((index+1)*25,`Đã xác minh mẫu ${index+1}/4`);
     });
-    detail='Đọc/ghi đúng 4 mẫu trên vùng nhớ 64 MiB của ứng dụng. Windows có thể dùng bộ nhớ ảo; đây không phải bài kiểm tra toàn bộ RAM. Chạy thêm Dell ePSA hoặc Windows Memory Diagnostic.';
+    detail='Đọc/ghi đúng 4 mẫu trên vùng nhớ 64 MiB của ứng dụng. Windows có thể dùng bộ nhớ ảo; đây không phải bài kiểm tra toàn bộ RAM. Chạy thêm chẩn đoán tích hợp của hãng (F12 lúc khởi động) hoặc Windows Memory Diagnostic.';
   } else if(workerData.kind==='memoryDeep') {
     // User-mode RAM test in the style of MemTest86's patterns, over `sizeMiB` of this process' memory (256 MiB chunks):
     // address-in-address, moving inversions 0/1 and checkerboard, walking bit, and a seeded random fill. Windows decides
@@ -53,7 +53,7 @@ try {
     const seconds=Math.round((performance.now()-start)/1000),label=sizeMiB>=1024?`${(sizeMiB/1024).toFixed(1)} GiB`:`${sizeMiB} MiB`;
     metrics={sizeMiB,passes:passes.length,seconds,errorCount,errors,MBps:Math.round(words*4*16/1e6/Math.max(1,seconds))};
     if(errorCount){
-      throw Object.assign(Error(`Phát hiện ${errorCount.toLocaleString('vi-VN')} lỗi trên ${label} RAM (${passes.length} bài, ${seconds} giây). Lỗi đầu: bài ${errors[0].pass}, đoạn ${errors[0].chunk}, byte ${errors[0].offset} — cần ${errors[0].expected}, đọc được ${errors[0].actual} (${errors[0].bits} bit sai). RAM rất có thể hỏng: chạy Windows Memory Diagnostic hoặc Dell ePSA để xác nhận, thử từng thanh.`),{metrics});
+      throw Object.assign(Error(`Phát hiện ${errorCount.toLocaleString('vi-VN')} lỗi trên ${label} RAM (${passes.length} bài, ${seconds} giây). Lỗi đầu: bài ${errors[0].pass}, đoạn ${errors[0].chunk}, byte ${errors[0].offset} — cần ${errors[0].expected}, đọc được ${errors[0].actual} (${errors[0].bits} bit sai). RAM rất có thể hỏng: chạy Windows Memory Diagnostic hoặc chẩn đoán tích hợp của hãng (F12 lúc khởi động) để xác nhận, thử từng thanh.`),{metrics});
     }
     detail=`Không có lỗi trên ${label} RAM sau ${passes.length} bài (địa chỉ, đảo bit 0/1, bàn cờ, bit chạy, ngẫu nhiên) trong ${seconds} giây. Chỉ kiểm phần RAM Windows cấp cho app; muốn quét toàn bộ RAM, chạy Windows Memory Diagnostic.`;
   } else if(workerData.kind==='disk') {
@@ -79,8 +79,12 @@ try {
       }
       const start=performance.now();fs.fsyncSync(fd);writeMs+=performance.now()-start;
     } finally {fs.closeSync(fd);}
-    const read=crypto.createHash('sha256'),buffer=Buffer.alloc(CHUNK);let readMs=0;
-    const rfd=fs.openSync(file,'r');
+    // Read back unbuffered (UV_FS_O_DIRECT → FILE_FLAG_NO_BUFFERING): the file was just written, so a buffered read
+    // would come from Windows' RAM cache (e.g. 11 GB/s on a 6 GB/s drive). Opening it unbuffered also purges that cache.
+    // allocUnsafeSlow gives a page-aligned buffer as NO_BUFFERING requires; if the volume still refuses, fall back.
+    const read=crypto.createHash('sha256'),buffer=Buffer.allocUnsafeSlow(CHUNK);let readMs=0,readCached=false,rfd;
+    try {rfd=fs.openSync(file,fs.constants.O_RDONLY|0x02000000);fs.readSync(rfd,buffer,0,CHUNK,0);}
+    catch {if(rfd!==undefined)fs.closeSync(rfd);rfd=fs.openSync(file,'r');readCached=true;}
     try {
       for(let i=0;i<CHUNKS;i++) {
         const start=performance.now();let got=0;
@@ -93,8 +97,8 @@ try {
     } finally {fs.closeSync(rfd);}
     if(read.digest('hex')!==written.digest('hex'))throw Error('Nội dung tệp đọc lại khác dữ liệu đã ghi');
     const speed=ms=>Math.round(TOTAL/1e6/(ms/1000));
-    metrics={sizeMiB,writeMBps:speed(writeMs),readMBps:speed(readMs),minWriteMBps:samples.length?Math.min(...samples):null,maxWriteMBps:samples.length?Math.max(...samples):null,samples};
-    detail=`Ghi ${metrics.writeMBps} MB/s (thấp nhất ${metrics.minWriteMBps ?? '—'} MB/s) · đọc lại ${metrics.readMBps} MB/s · ${label} khớp SHA-256 tại ${workerData.tempDir}. Ghi thẳng xuống ổ (write-through); tốc độ đọc có thể đến từ bộ nhớ đệm Windows nếu tệp nhỏ hơn RAM trống. Không phải benchmark chuẩn hay quét toàn bộ bề mặt. Tệp tạm được dọn sau bài thử.`;
+    metrics={sizeMiB,readCached,writeMBps:speed(writeMs),readMBps:speed(readMs),minWriteMBps:samples.length?Math.min(...samples):null,maxWriteMBps:samples.length?Math.max(...samples):null,samples};
+    detail=`Ghi ${metrics.writeMBps} MB/s (thấp nhất ${metrics.minWriteMBps ?? '—'} MB/s) · đọc lại ${metrics.readMBps} MB/s · ${label} khớp SHA-256 tại ${workerData.tempDir}. Ghi thẳng xuống ổ (write-through)${readCached?'; ổ không cho đọc bỏ qua bộ đệm nên tốc độ đọc có thể đến từ RAM':', đọc thẳng từ ổ (bỏ qua bộ đệm Windows)'}. Không phải benchmark chuẩn hay quét toàn bộ bề mặt. Tệp tạm được dọn sau bài thử.`;
   } else throw Error('Unknown diagnostic');
   parentPort.postMessage({type:'result',state:'completed',detail,metrics});
 } catch(error) {

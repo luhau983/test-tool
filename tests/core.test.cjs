@@ -23,8 +23,8 @@ test('device error codes produce warnings',()=>{
 function raw(structs){const payload=Buffer.concat(structs),head=Buffer.from([0,3,5,0,0,0,0,0]);head.writeUInt32LE(payload.length,4);return Buffer.concat([head,payload]);}
 function structure(type,length,strings,fill){const b=Buffer.alloc(length);b[0]=type;b[1]=length;fill?.(b);return Buffer.concat([b,Buffer.from(strings.length?strings.join('\0')+'\0\0':'\0\0')]);}
 test('SMBIOS parses firmware strings and retains unknown structure',()=>{
-  const b=raw([structure(1,27,['Dell Inc.','Latitude 5420','ABC1234'],b=>{b[4]=1;b[5]=2;b[7]=3;}),structure(250,4,['OEM data']),structure(127,4,[])]);
-  const result=parseSMBIOS(b);assert.equal(result.groups.smbiosSystem[0].Product,'Latitude 5420');assert.equal(result.groups.smbiosSystem[0].SerialNumber,'ABC1234');assert.equal(result.structures[1].Type,250);assert.equal(result.structures[1].Strings,'OEM data');
+  const b=raw([structure(1,27,['Acme Inc.','Model 5420','ABC1234'],b=>{b[4]=1;b[5]=2;b[7]=3;}),structure(250,4,['OEM data']),structure(127,4,[])]);
+  const result=parseSMBIOS(b);assert.equal(result.groups.smbiosSystem[0].Product,'Model 5420');assert.equal(result.groups.smbiosSystem[0].SerialNumber,'ABC1234');assert.equal(result.structures[1].Type,250);assert.equal(result.structures[1].Strings,'OEM data');
 });
 test('SMBIOS memory differentiates empty slots, unknown and extended sizes',()=>{
   const b=raw([structure(17,34,['DIMM A'],b=>{b[16]=1;b.writeUInt16LE(0,12);}),structure(17,34,[],b=>{b.writeUInt16LE(0xffff,12);}),structure(17,34,[],b=>{b.writeUInt16LE(0x7fff,12);b.writeUInt32LE(32768,28);})]);
@@ -46,15 +46,15 @@ test('HTML report escapes device, manual, notes and error content',()=>{
 function worker(kind,tempDir){return new Promise((resolve,reject)=>{const w=new Worker(path.join(__dirname,'../src/diagnostic-worker.cjs'),{workerData:{kind,tempDir}});w.on('message',m=>{if(m.type==='result')resolve(m);});w.on('error',reject);});}
 test('RAM diagnostic verifies its allocated memory',async()=>{const r=await worker('memory');assert.equal(r.state,'completed');assert(r.detail.includes('64 MiB'));});
 test('disk diagnostic verifies real bytes and preserves existing files',async()=>{
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dell-inspect-unit-'));
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'test-tool-unit-'));
   try{await fs.writeFile(path.join(dir,'existing.txt'),'do not touch');const r=await worker('disk',dir);assert.equal(r.state,'completed');assert.equal(await fs.readFile(path.join(dir,'existing.txt'),'utf8'),'do not touch');assert.equal((await fs.stat(path.join(dir,'verify.bin'))).size,256*1024*1024);assert.match(r.detail,/Ghi \d+ MB\/s .* đọc lại \d+ MB\/s/);}finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 test('disk diagnostic refuses to overwrite an existing verify file',async()=>{
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dell-inspect-unit-'));
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'test-tool-unit-'));
   try{await fs.writeFile(path.join(dir,'verify.bin'),'original');const r=await worker('disk',dir);assert.equal(r.state,'error');assert.equal(await fs.readFile(path.join(dir,'verify.bin'),'utf8'),'original');}finally{await fs.rm(dir,{recursive:true,force:true});}
 });
-test('PowerShell scripts have UTF-8 BOM for Windows PowerShell 5.1',async()=>{for(const name of ['collect.ps1','smart.ps1']){const b=await fs.readFile(path.join(__dirname,'../src',name));assert.equal(b.subarray(0,3).toString('hex'),'efbbbf',name);}});
+test('PowerShell scripts have UTF-8 BOM for Windows PowerShell 5.1',async()=>{for(const name of ['collect.ps1','smart.ps1','keyboards.ps1']){const b=await fs.readFile(path.join(__dirname,'../src',name));assert.equal(b.subarray(0,3).toString('hex'),'efbbbf',name);}});
 test('report identity comes from SMBIOS Type 1, not Windows CIM sections',()=>{
-  const html=makeReport({sections:{smbiosSystem:{status:'ok',data:[{Product:'Latitude 7490',SerialNumber:'ABC1234'}]},system:{status:'ok',data:[{Model:'CIM model'}]},bios:{status:'ok',data:[{SerialNumber:'CIMTAG1'}]}}},[],[],'');
-  assert(html.includes('Latitude 7490 · Service Tag: ABC1234'));assert(!html.includes('Service Tag: CIMTAG1'));
+  const html=makeReport({sections:{smbiosSystem:{status:'ok',data:[{Product:'Model 7490',SerialNumber:'ABC1234'}]},system:{status:'ok',data:[{Model:'CIM model'}]},bios:{status:'ok',data:[{SerialNumber:'CIMTAG1'}]}}},[],[],'');
+  assert(html.includes('Model 7490 · số serial: ABC1234'));assert(!html.includes('số serial: CIMTAG1'));
 });

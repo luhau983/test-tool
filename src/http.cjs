@@ -1,4 +1,4 @@
-// Shared HTTP helpers for the Dell clients: bounded JSON body reading and timeout detection.
+// Shared HTTP helpers for the warranty clients: bounded JSON body reading and timeout detection.
 const MAX_BYTES=2*1024*1024;
 const isTimeout=error=>error?.name==='TimeoutError' || error?.name==='AbortError';
 async function readLimitedJSON(response,label,invalidJSON){

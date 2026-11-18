@@ -1,5 +1,5 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
-const {licenseInfo,licenseExpiry,memoryDiagnosticInfo,stabilityInfo,firstUseInfo,officeInfo,mdmInfo,hardwareTruth,memoryInfo,memoryVendor,usageInfo,ago,assess,CYCLE_WARN}=require('../src/assessment.cjs');
+const {licenseInfo,licenseExpiry,keyboardGuess,keyboardDevices,diskSpeedVerdict,memoryDiagnosticInfo,stabilityInfo,firstUseInfo,officeInfo,mdmInfo,hardwareTruth,memoryInfo,memoryVendor,usageInfo,ago,assess,CYCLE_WARN}=require('../src/assessment.cjs');
 const {makeReport}=require('../src/report.cjs');
 test('report includes the full-run statistics, escaped, and omits the section when there was no run',()=>{
   const run={startedAt:'2026-11-18T01:00:00.000Z',endedAt:'2026-11-18T01:05:30.000Z',stopped:false,steps:[{title:'Màn hình',status:'Đạt',detail:'0 vị trí'},{title:'Webcam <x>',status:'Có lỗi',detail:'<b>mờ</b>'},{title:'Pin',status:'Bỏ qua',detail:''}]};
@@ -195,4 +195,41 @@ test('Windows Memory Diagnostic results: newest first, judged by message then id
   assert.equal(r([{Time:'2026-11-01T00:00:00Z',Id:1101,Message:''}]).last.verdict,'ok');
   assert.equal(r([]).available,false);
   assert(assess({sections:{memoryDiag:{status:'ok',data:[{Time:'2026-11-01T00:00:00Z',Id:1202,Message:'detected hardware errors'}]}}}).some(c=>c.title==='Windows Memory Diagnostic phát hiện lỗi RAM'));
+});
+
+test('disk speed verdict: graded by drive type, sustained-write drop, cached read and unknown drives',()=>{
+  const nvme={protocol:'nvme',bus:'NVMe',isSSD:true},sata={protocol:'ata',bus:'SATA',isSSD:true,rotation:'SSD'},hdd={protocol:'ata',bus:'SATA',media:'HDD',rotation:'5400 rpm'};
+  const m=(w,r,min,max,extra={})=>({sizeMiB:16384,writeMBps:w,readMBps:r,minWriteMBps:min,maxWriteMBps:max,...extra});
+  const good=diskSpeedVerdict(m(1426,4582,963,1592),nvme);
+  assert.equal(good.status,'good');assert.equal(good.label,'Tốt');assert.match(good.points[0].text,/SHA-256.{1,2}trên 16 GiB/);assert.match(good.expected,/SSD NVMe/);
+  const qlc=diskSpeedVerdict(m(900,3000,120,2000),nvme);assert.equal(qlc.status,'caution');assert(qlc.points.some(p=>/bộ đệm nhanh của ổ đã đầy/.test(p.text)));
+  assert.equal(diskSpeedVerdict(m(120,150,100,140),nvme).status,'bad');
+  assert.equal(diskSpeedVerdict(m(480,520,430,500),sata).status,'good');
+  assert.equal(diskSpeedVerdict(m(200,260,180,220),sata).status,'caution');
+  assert.equal(diskSpeedVerdict(m(110,120,95,130),hdd).status,'good');
+  assert.equal(diskSpeedVerdict(m(30,35,15,40),hdd).status,'bad');
+  const cached=diskSpeedVerdict(m(1426,11567,963,1592,{readCached:true}),nvme);assert.equal(cached.status,'good');assert(cached.points.some(p=>/bộ đệm RAM/.test(p.text)));
+  assert.equal(diskSpeedVerdict(m(30,30,20,40),{bus:'USB'}).status,'unknown');
+  assert.equal(diskSpeedVerdict(null,nvme),null);
+});
+
+test('keyboard guess: desktop chassis, laptop panel size, external-only and unknown',()=>{
+  const r=(chassis,displays)=>({sections:{smbiosChassis:{status:'ok',data:chassis==null?[]:[{ChassisType:chassis}]},displays:{status:'ok',data:displays}}});
+  assert.equal(keyboardGuess(r(3,[{WidthCm:53,HeightCm:29,Internal:false}])).layout,'full');
+  const big=keyboardGuess(r(10,[{WidthCm:34,HeightCm:19,Internal:true}]));assert.equal(big.layout,'full');assert.equal(big.panelInches,15.3);
+  const small=keyboardGuess(r(10,[{WidthCm:31,HeightCm:17,Internal:true},{WidthCm:53,HeightCm:29,Internal:false}]));assert.equal(small.layout,'compact');assert.equal(small.panelInches,13.9);
+  assert.equal(keyboardGuess(r(null,[{WidthCm:53,HeightCm:29,Internal:false}])).layout,'full');
+  assert.equal(keyboardGuess({sections:{}}).layout,'compact');
+});
+
+test('keyboard devices: external warning on laptops, names, hints, desktop with several devices',()=>{
+  const laptop=keyboardDevices([{Kind:'builtin',Status:'OK'},{Kind:'bluetooth',Name:'Keychron K3 TKL',Status:'OK'}]);
+  assert.equal(laptop.builtin,true);assert.equal(laptop.external,1);assert.match(laptop.warning,/ngắt bàn phím rời/);assert.equal(laptop.hint,'compact');
+  assert.equal(laptop.devices[1].title,'Keychron K3 TKL');
+  const alone=keyboardDevices([{Kind:'builtin',Status:'OK'}]);assert.equal(alone.warning,null);
+  const desk=keyboardDevices([{Kind:'usb',VidPid:'05AC:024F',Status:'OK'},{Kind:'usb',Name:'USB Gaming Keyboard',VidPid:'1A2C:4184',Status:'OK'}]);
+  assert.match(desk.warning,/2 thiết bị nhận là bàn phím/);assert.equal(desk.devices[0].title,'Bàn phím USB 05AC:024F');assert.equal(desk.hint,null);
+  assert.equal(keyboardDevices([{Kind:'usb',Name:'Numpad Full Size',Status:'Error'}]).devices[0].ok,false);
+  const r=(kb)=>({sections:{smbiosChassis:{status:'ok',data:[{ChassisType:3}]},keyboards:{status:'ok',data:kb}}});
+  assert.equal(keyboardGuess(r([{Kind:'usb',Name:'Mini 60% board'}])).layout,'compact');assert.equal(keyboardGuess(r([{Kind:'usb',Name:'Any'}])).layout,'full');
 });

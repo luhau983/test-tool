@@ -1,12 +1,12 @@
 // Full end-to-end test: runs the real main/preload/renderer in a hidden Electron window and drives every feature.
 // External effects are stubbed: native dialogs write into a temp folder, shell.openExternal is recorded,
-// Dell website traffic is served by a protocol handler and TechDirect by a fetch stub. Nothing leaves the machine.
-// Run: npm run test:e2e   (set DELL_QA_ASAR=<unpacked app dir> to test a packaged build)
+// Support-site traffic is served by a protocol handler and the warranty API by a fetch stub. Nothing leaves the machine.
+// Run: pnpm test:e2e   (set QA_APP_DIR=<unpacked app dir> to test a packaged build)
 const {app,BrowserWindow,dialog,shell,session,ipcMain}=require('electron');
 const fs=require('node:fs');const os=require('node:os');const path=require('node:path');const assert=require('node:assert/strict');
 
-const dir=fs.mkdtempSync(path.join(os.tmpdir(),'dell-inspect-e2e-'));
-const appDir=process.env.DELL_QA_ASAR || path.join(__dirname,'..');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'test-tool-e2e-'));
+const appDir=process.env.QA_APP_DIR || path.join(__dirname,'..');
 app.setPath('userData',path.join(dir,'profile'));app.disableHardwareAcceleration();
 
 // ---- Stubs ----
@@ -17,13 +17,14 @@ dialog.showOpenDialog=async()=>{openDialogs++;return cancelOpenDialog?{canceled:
 dialog.showSaveDialog=async()=>({canceled:false,filePath:nextSavePath});
 dialog.showMessageBox=async(_win,options)=>{messageBoxes.push(options.message);return {response:0};};
 shell.openExternal=async url=>{opened.push(url);};
-const TOKEN_URL='https://apigtwb2c.us.dell.com/auth/oauth/v2/token';
+const {TOKEN_URL,PORTAL_URL}=require('../src/warranty-api.cjs');
+const {supportPageURL}=require('../src/warranty-web.cjs');
 const fetchCalls=[];
 globalThis.fetch=async(url,options={})=>{
   fetchCalls.push({url:String(url),body:String(options.body || '')});
   const json=body=>new Response(JSON.stringify(body),{status:200,headers:{'Content-Type':'application/json'}});
   if(String(url)===TOKEN_URL)return json({access_token:'e2e-token',expires_in:3600});
-  return json([{serviceTag:'ABC1234',systemDescription:'Latitude 5420',shipDate:'2021-06-01',countryCode:'VN',entitlements:[{serviceLevelDescription:'ProSupport',startDate:'2021-06-01',endDate:'2024-06-01'}]}]);
+  return json([{serviceTag:'ABC1234',systemDescription:'Model 5420',shipDate:'2021-06-01',countryCode:'VN',entitlements:[{serviceLevelDescription:'Premium Support',startDate:'2021-06-01',endDate:'2024-06-01'}]}]);
 };
 
 require(path.join(appDir,'src/main.cjs'));
@@ -41,10 +42,10 @@ app.whenReady().then(async()=>{
   const smartAdminCalls=[];
   ipcMain.removeHandler('disk-smart-admin');
   ipcMain.handle('disk-smart-admin',()=>{smartAdminCalls.push(Date.now());throw Error('Đã hủy hộp thoại quyền quản trị (UAC). Bảng SMART chưa được đọc.');});
-  // Dell website traffic in the isolated Dell session is answered locally.
-  session.fromPartition('dell-support-session').protocol.handle('https',request=>{
-    if(request.method==='POST')return new Response(JSON.stringify({IsValid:true,ProductName:'Latitude E2E',csrfToken:'never-export'}),{headers:{'Content-Type':'application/json'}});
-    return new Response('<!doctype html><title>Dell</title><p>stub</p>',{headers:{'Content-Type':'text/html'}});
+  // Support-site traffic in the isolated warranty session is answered locally.
+  session.fromPartition('warranty-session').protocol.handle('https',request=>{
+    if(request.method==='POST')return new Response(JSON.stringify({IsValid:true,ProductName:'Model E2E',csrfToken:'never-export'}),{headers:{'Content-Type':'application/json'}});
+    return new Response('<!doctype html><title>Support</title><p>stub</p>',{headers:{'Content-Type':'text/html'}});
   });
   const win=BrowserWindow.getAllWindows()[0];
   const consoleErrors=[];win.webContents.on('console-message',details=>{if(details.level==='error')consoleErrors.push(details.message);});
@@ -57,7 +58,7 @@ app.whenReady().then(async()=>{
 
   await step('Khởi động: preload API, 15 mục menu, 25 mục biên bản chưa thử',async()=>{
     const api=await js('Object.keys(window.inspect).sort().join()');
-    for(const name of ['scan','diskSmartAdmin','diagnostic','stop','export','exportFirmware','dellLookup','dellWebLookup','dellConfigure','dellWebBrowser','batteryCurrent','batteryStart','batteryStop','openTool','support'])assert(api.split(',').includes(name),`thiếu window.inspect.${name}`);
+    for(const name of ['scan','diskSmartAdmin','diagnostic','stop','export','exportFirmware','warrantyLookup','warrantyWebLookup','warrantyConfigure','warrantyBrowserOpen','batteryCurrent','batteryStart','batteryStop','openTool','support'])assert(api.split(',').includes(name),`thiếu window.inspect.${name}`);
     assert.equal(await js('typeof require'),'undefined','renderer không được có Node');
     assert.equal(await js('document.querySelectorAll(".nav").length'),15);
     assert.equal(await js('!!document.querySelector(".brand")'),false,'không còn logo + tên ở thanh bên');
@@ -68,7 +69,7 @@ app.whenReady().then(async()=>{
   await step('Quét tự động khi mở: SMBIOS, bản quyền, ngày cài Windows',async()=>{
     await until('!scanBusy && scanReport!==null',120000,'quét xong');
     const s=await js('Object.fromEntries(Object.entries(scanReport.sections).map(([k,v])=>[k,v.status]))');
-    for(const key of ['firmwareRaw','hardwareTruth','firmwareInfo','smbiosSystem','smbiosBIOS','os','license','activation','activationHistory','powerEvents','stability','firstUse','windowsInfo','office','mdm','accounts','hotfixes','smartRaw','diskHealth'])assert.equal(s[key],'ok',`section ${key}=${s[key]}`);
+    for(const key of ['firmwareRaw','hardwareTruth','firmwareInfo','smbiosSystem','smbiosBIOS','os','license','activation','activationHistory','powerEvents','stability','firstUse','displays','keyboards','windowsInfo','office','mdm','accounts','hotfixes','smartRaw','diskHealth'])assert.equal(s[key],'ok',`section ${key}=${s[key]}`);
     assert(await js('scanReport.diskDetails.length')>=1,'đọc được ít nhất một ổ');
     if(await js('smartNeedsAdmin()')){
       await until('!scanBusy',5000);
@@ -84,7 +85,7 @@ app.whenReady().then(async()=>{
     assert(/^\d{4}-\d{2}-\d{2}$/.test(await js('scanReport.sections.os.data[0].InstallDate')),'InstallDate phải dạng yyyy-MM-dd');
     assert(!(await js('JSON.stringify(scanReport.sections.license)')).match(/[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}/),'không được chứa khóa Windows đầy đủ');
     assert((await text('#usageMetrics')).includes(await js('licenseInfo(scanReport).label')),'thẻ bản quyền hiện kết luận hợp lệ / crack');
-    assert(!(await text('#dellIdentity')).includes('Đang tự đọc'));
+    assert(!(await text('#warrantyIdentity')).includes('Đang tự đọc'));
   });
 
   await step('Điều hướng: đủ 15 trang, tiêu đề + phụ đề',async()=>{
@@ -195,7 +196,7 @@ app.whenReady().then(async()=>{
   });
 
   await step('Mỗi tab có thẻ tổng quan ở đầu trang',async()=>{
-    for(const page of ['overview','hardware','disks','memory','windows','usage','firmware','dell','battery','screen','input','media','diagnostics']){
+    for(const page of ['overview','hardware','disks','memory','windows','usage','firmware','warranty','battery','screen','input','media','diagnostics']){
       await js(`go("${page}")`);
       const n=await js(`document.querySelectorAll("#${page} .stat-card").length`);
       assert(n>=3,`trang ${page} chỉ có ${n} thẻ tổng quan`);
@@ -252,15 +253,15 @@ app.whenReady().then(async()=>{
   });
 
   await step('Test toàn bộ: 6 bài tự động + 7 bước người thử chấm → trang thống kê',async()=>{
-    await js('go("dell")');await setValue('#dellMethod','web');await js('document.querySelector("#dellInFull").checked=true');await setValue('#dellTag','ABC1234');
+    await js('go("warranty")');await setValue('#warrantyMethod','web');await js('document.querySelector("#warrantyInFull").checked=true');await setValue('#warrantyTag','ABC1234');
     const findingsBefore=await js('document.querySelectorAll("#testResults .finding").length');
     await click('#testAll');
     await until('fullStep===6 && !testBusy && !scanBusy',180000,'chạy xong phần tự động');
     assert.equal(await js('runLog.steps.map(s=>s.status).join()'),'pass,pass,pass,pass,pass,pass',await js('JSON.stringify(runLog.steps)'));
     const drives=await js('diskDrives()');
     assert.equal(await js('document.querySelectorAll("#testResults .finding").length')-findingsBefore,2+drives.length,'CPU, RAM và từng ổ');
-    assert(await text('#dellResults').then(t=>t.includes('Latitude E2E')),'tra Dell trong lượt Test toàn bộ');
-    for(const root of [os.tmpdir(),...drives.map(d=>d+path.sep)])assert.equal(fs.readdirSync(root).filter(n=>n.startsWith('dell-inspect-test-')).length,0,`thư mục tạm ổ đĩa phải được dọn ở ${root}`);
+    assert(await text('#warrantyResults').then(t=>t.includes('Model E2E')),'tra bảo hành trong lượt Test toàn bộ');
+    for(const root of [os.tmpdir(),...drives.map(d=>d+path.sep)])assert.equal(fs.readdirSync(root).filter(n=>n.startsWith('test-tool-test-')).length,0,`thư mục tạm ổ đĩa phải được dọn ở ${root}`);
     assert.equal(await js('document.querySelector("#fullPass").classList.contains("hidden")'),false,'bước thủ công có nút Đạt');
     const choose=async(button,page)=>{assert.equal(await js('document.querySelector(".page.active").id'),page);await click(button);await wait(100);};
     await choose('#fullPass','screen');
@@ -279,7 +280,18 @@ app.whenReady().then(async()=>{
     assert((await text('#runMachine')).includes('Bản quyền Windows'));
     assert.equal(await js('manualItems[2].status+manualItems[4].status+manualItems[5].status+manualItems[7].status'),'ĐạtĐạtCó lỗiChưa thử','chỉ ghi biên bản theo lựa chọn của người thử');
     assert.equal(await js('manualItems.filter(m=>m.status==="Chưa thử").length'),19);
-    await js('document.querySelector("#dellInFull").checked=false');
+    await js('document.querySelector("#warrantyInFull").checked=false');
+  });
+
+  await step('Ổ cứng: sau bài thử có đánh giá theo loại ổ, đọc thẳng từ ổ',async()=>{
+    const drive=await js('Object.keys(diskTests).find(k=>diskTests[k].metrics)');
+    assert(drive,'chưa có kết quả thử ổ');
+    const r=await js(`diskTests["${drive}"]`);
+    assert(r.verdict && ['good','caution','bad','unknown'].includes(r.verdict.status),'thiếu đánh giá');
+    assert.equal(r.metrics.readCached,false,'đọc phải bỏ qua bộ đệm Windows');
+    assert(r.detail.startsWith(r.verdict.label+':'));
+    await js(`go("disks");diskIndex=scanReport.diskDetails.findIndex(d=>firstLetter(d)==="${drive}");renderDisks()`);
+    assert((await text('#diskView')).includes(`Đánh giá: ${r.verdict.label}`));
   });
 
   await step('Dừng Test toàn bộ giữa chừng vẫn có thống kê',async()=>{
@@ -337,8 +349,26 @@ app.whenReady().then(async()=>{
     await click('#clearKeys');assert.equal(await js('document.querySelectorAll(".key.seen").length'),0);
   });
 
+  await step('Bàn phím: tự nhận kiểu có / không phím số, đổi tay, phím số tự chuyển',async()=>{
+    await js('go("input")');
+    const guess=await js('keyboardGuess(scanReport)');
+    await setValue('#kbLayout','auto');
+    assert.equal(await js('!!document.querySelector(".key-pad")'),guess.layout==='full',guess.reason);
+    assert((await text('#kbInfo')).includes('Tự nhận'));
+    await setValue('#kbLayout','compact');assert.equal(await js('!!document.querySelector(".key-pad")'),false);
+    await setValue('#kbLayout','full');assert.equal(await js('document.querySelectorAll(".key-pad .key").length'),17);
+    assert.equal(await js('localStorage.getItem("kbLayout")'),'full');
+    await setValue('#kbLayout','compact');await js('kbChoice="auto";renderKeyboard();if(document.querySelector(".key-pad")){kbChoice="compact";renderKeyboard();kbChoice="auto";}');
+    await js('setKeyboard(true);document.querySelector("#keyboard").dispatchEvent(new KeyboardEvent("keydown",{key:"5",code:"Numpad5",bubbles:true,cancelable:true}))');
+    assert.equal(await js('!!document.querySelector(".key-pad") && document.querySelector("[data-code=Numpad5]").classList.contains("seen")'),true,'nhấn phím số phải hiện bàn phím có phím số');
+    assert((await text('#kbDevices')).includes('Bàn phím đang kết nối'));
+    await click('#kbRefresh');await until('!kbDeviceBusy && Array.isArray(kbDeviceList)',30000,'dò lại bàn phím');
+    assert.equal(await js('document.querySelectorAll("#kbDevices .badge").length'),await js('keyboardDevices(kbDeviceList).devices.length'));
+    await js('setKeyboard(false);kbChoice="auto";localStorage.removeItem("kbLayout");renderKeyboard();document.querySelectorAll(".key").forEach(k=>k.classList.remove("seen","pressed"))');
+  });
+
   await step('Touchpad: click trái/phải và cuộn được đếm',async()=>{
-    await js('go("input")');await wait(200);
+    await js('go("input");document.querySelector("#pointerPad").scrollIntoView({block:"center"})');await wait(200);
     const r=await js('(()=>{const b=document.querySelector("#pointerPad").getBoundingClientRect();return {x:Math.round(b.left+b.width/2),y:Math.round(b.top+b.height/2)};})()');
     for(const button of ['left','right']){win.webContents.sendInputEvent({type:'mouseDown',x:r.x,y:r.y,button,clickCount:1});win.webContents.sendInputEvent({type:'mouseUp',x:r.x,y:r.y,button,clickCount:1});}
     win.webContents.sendInputEvent({type:'mouseWheel',x:r.x,y:r.y,deltaX:0,deltaY:-120});
@@ -369,40 +399,40 @@ app.whenReady().then(async()=>{
     else assert(/pin|sạc/i.test(await text('#batteryTestStatus')),'phải nêu lý do không chạy');
   });
 
-  await step('Tra Dell web: kết quả, lọc token, mã sai, mở trang Dell trong app',async()=>{
-    await js('go("dell")');await setValue('#dellMethod','web');
-    assert.equal(await js('document.querySelector("#dellClientId").closest("article").classList.contains("hidden")'),true);
-    await setValue('#dellTag','ABC1234');await click('#dellLookup');
-    await until('document.querySelector("#dellResults").textContent.includes("Latitude E2E")',10000);
-    assert.equal((await text('#dellResults')).includes('never-export'),false,'token phiên không được hiển thị');
-    await setValue('#dellTag','invalid!');await click('#dellLookup');await until('document.querySelector("#dellResults").textContent.includes("5–12")',5000);
-    await setValue('#dellTag','ABC1234');await click('#openDellBrowser');
+  await step('Tra bảo hành qua trang hỗ trợ: kết quả, lọc token, mã sai, mở trang trong app',async()=>{
+    await js('go("warranty")');await setValue('#warrantyMethod','web');
+    assert.equal(await js('document.querySelector("#warrantyClientId").closest("article").classList.contains("hidden")'),true);
+    await setValue('#warrantyTag','ABC1234');await click('#warrantyLookup');
+    await until('document.querySelector("#warrantyResults").textContent.includes("Model E2E")',10000);
+    assert.equal((await text('#warrantyResults')).includes('never-export'),false,'token phiên không được hiển thị');
+    await setValue('#warrantyTag','invalid!');await click('#warrantyLookup');await until('document.querySelector("#warrantyResults").textContent.includes("5–12")',5000);
+    await setValue('#warrantyTag','ABC1234');await click('#openWarrantyBrowser');
     const start=Date.now();while(BrowserWindow.getAllWindows().length<2 && Date.now()-start<10000)await wait(100);
-    const dellWin=BrowserWindow.getAllWindows().find(w=>w!==win);assert(dellWin,'phải mở cửa sổ Dell');
-    while(!dellWin.webContents.getURL() && Date.now()-start<10000)await wait(100);
-    assert(dellWin.webContents.getURL().includes('/servicetag/ABC1234/'),dellWin.webContents.getURL());dellWin.destroy();
+    const supportWin=BrowserWindow.getAllWindows().find(w=>w!==win);assert(supportWin,'phải mở cửa sổ trang hỗ trợ');
+    while(!supportWin.webContents.getURL() && Date.now()-start<10000)await wait(100);
+    assert(supportWin.webContents.getURL()===supportPageURL('ABC1234'),supportWin.webContents.getURL());supportWin.destroy();
   });
 
-  await step('Tra TechDirect: thiếu khóa, nạp khóa, OAuth + bảo hành, xóa khóa',async()=>{
-    await setValue('#dellMethod','techdirect');await setValue('#dellTag','ABC1234');
-    await click('#dellLookup');await until('document.querySelector("#dellResults").textContent.includes("Cần Client ID")',5000);
+  await step('Tra API bảo hành: thiếu khóa, nạp khóa, OAuth + bảo hành, xóa khóa',async()=>{
+    await setValue('#warrantyMethod','api');await setValue('#warrantyTag','ABC1234');
+    await click('#warrantyLookup');await until('document.querySelector("#warrantyResults").textContent.includes("Cần Client ID")',5000);
     assert.equal(fetchCalls.length,0,'không gọi mạng khi chưa có khóa');
-    await setValue('#dellClientId','e2e-id');await setValue('#dellSecret','e2e-secret-value');await click('#dellConnect');
-    await until('document.querySelector("#dellAuthStatus").textContent.includes("Đã nạp")',5000);
-    assert.equal(await js('document.querySelector("#dellSecret").value'),'','xóa ô secret sau khi nạp');
-    await click('#dellLookup');await until('document.querySelector("#dellResults").textContent.includes("Latitude 5420")',10000);
-    assert((await text('#dellResults')).includes('ProSupport'));
+    await setValue('#warrantyClientId','e2e-id');await setValue('#warrantySecret','e2e-secret-value');await click('#warrantyConnect');
+    await until('document.querySelector("#warrantyAuthStatus").textContent.includes("Đã nạp")',5000);
+    assert.equal(await js('document.querySelector("#warrantySecret").value'),'','xóa ô secret sau khi nạp');
+    await click('#warrantyLookup');await until('document.querySelector("#warrantyResults").textContent.includes("Model 5420")',10000);
+    assert((await text('#warrantyResults')).includes('Premium Support'));
     assert.equal(fetchCalls[0].url,TOKEN_URL);assert(fetchCalls[0].body.includes('client_secret=e2e-secret-value'));
-    await click('#dellClear');await until('document.querySelector("#dellAuthStatus").textContent.includes("Đã xóa")',5000);
-    await setValue('#dellMethod','web');
+    await click('#warrantyClear');await until('document.querySelector("#warrantyAuthStatus").textContent.includes("Đã xóa")',5000);
+    await setValue('#warrantyMethod','web');
   });
 
-  await step('Liên kết ngoài: trang Dell, cài đặt Windows, TechDirect',async()=>{
+  await step('Liên kết ngoài: trang hỗ trợ, cài đặt Windows, cổng API bảo hành',async()=>{
     opened.length=0;
-    await setValue('#dellTag','ABC1234');await click('#supportFallback');await click('#support');
+    await setValue('#warrantyTag','ABC1234');await click('#supportFallback');await click('#support');
     await js('document.querySelectorAll("[data-tool]").forEach(b=>b.click())');await wait(500);
-    assert(opened.some(u=>u.includes('/servicetag/ABC1234/overview')));
-    for(const link of ['ms-settings:display','ms-settings:sound','ms-settings:privacy-microphone','ms-settings:privacy-webcam','https://techdirect.dell.com/','ms-settings:activation','ms-settings:windowsupdate','ms-settings:otherusers','ms-settings:recovery','ms-settings:about','windowsdefender:','ms-settings:workplace'])assert(opened.includes(link),`thiếu ${link}`);
+    assert(opened.some(u=>u.includes('ABC1234') && u.includes('/overview')));
+    for(const link of ['ms-settings:display','ms-settings:sound','ms-settings:privacy-microphone','ms-settings:privacy-webcam',PORTAL_URL,'ms-settings:activation','ms-settings:windowsupdate','ms-settings:otherusers','ms-settings:recovery','ms-settings:about','windowsdefender:','ms-settings:workplace'])assert(opened.includes(link),`thiếu ${link}`);
   });
 
   await step('Biên bản: chọn kết quả, ghi chú, tổng hợp, xuất HTML đầy đủ + escape',async()=>{
@@ -415,7 +445,7 @@ app.whenReady().then(async()=>{
     nextSavePath=path.join(dir,'report.html');await click('#exportBottom');
     await until('document.querySelector("#toastText").textContent.includes("Đã lưu báo cáo")',10000);
     const report=fs.readFileSync(nextSavePath,'utf8');
-    for(const expected of ['Kết quả lượt Test toàn bộ','Đạt 10','Có lỗi 1','diskHealth','diskSmart','ghi/đọc 256 MiB, đo tốc độ','&lt;script&gt;QA&lt;/script&gt;','Nứt bản lề &lt;img src=x&gt;','Có lỗi','CPU · tải 1 luồng','RAM · vùng nhớ 64 MiB','smbiosSystem','license','Bản quyền Windows','InstallDate','x=123, y=45','Độ sáng 50% &lt;b&gt;e2e&lt;/b&gt;','dellWebsite','dellAPIWarranty','ProSupport'])assert(report.includes(expected),`báo cáo thiếu: ${expected}`);
+    for(const expected of ['Kết quả lượt Test toàn bộ','Đạt 10','Có lỗi 1','diskHealth','diskSmart','ghi/đọc 256 MiB, đo tốc độ','&lt;script&gt;QA&lt;/script&gt;','Nứt bản lề &lt;img src=x&gt;','Có lỗi','CPU · tải 1 luồng','RAM · vùng nhớ 64 MiB','smbiosSystem','license','Bản quyền Windows','InstallDate','x=123, y=45','Độ sáng 50% &lt;b&gt;e2e&lt;/b&gt;','warrantyWebsite','warrantyApiCoverage','Premium Support'])assert(report.includes(expected),`báo cáo thiếu: ${expected}`);
     assert(!report.includes('smartRaw'),'không xuất dữ liệu SMART thô base64');
     for(const secret of ['e2e-secret-value','e2e-token','never-export','<script>QA'])assert(!report.includes(secret),`báo cáo lộ: ${secret}`);
   });

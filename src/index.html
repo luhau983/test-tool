@@ -50,7 +50,7 @@
     <button class="nav" data-page="windows" title="Windows"><svg class="icon"><use href="#i-windows"/></svg><span class="nav-label">Windows</span></button>
     <button class="nav" data-page="usage" title="Sử dụng"><svg class="icon"><use href="#i-clock"/></svg><span class="nav-label">Sử dụng</span></button>
     <button class="nav" data-page="firmware" title="BIOS / SMBIOS"><svg class="icon"><use href="#i-chip"/></svg><span class="nav-label">BIOS / SMBIOS</span></button>
-    <button class="nav" data-page="dell" title="Tra Dell"><svg class="icon"><use href="#i-globe"/></svg><span class="nav-label">Tra Dell</span></button>
+    <button class="nav" data-page="warranty" title="Tra bảo hành"><svg class="icon"><use href="#i-globe"/></svg><span class="nav-label">Tra bảo hành</span></button>
     <p class="nav-section px-2.5 pt-5 pb-1 text-[11px] font-medium muted">THỬ TRỰC TIẾP</p>
     <button class="nav" data-page="battery" title="Pin &amp; sạc"><svg class="icon"><use href="#i-battery"/></svg><span class="nav-label">Pin &amp; sạc</span></button>
     <button class="nav" data-page="screen" title="Màn hình"><svg class="icon"><use href="#i-monitor"/></svg><span class="nav-label">Màn hình</span></button>
@@ -84,7 +84,7 @@
   <div class="panel flex items-center gap-5 bg-linear-to-br from-blue-50 via-base-100 to-base-100">
     <span class="icon-tile size-14 rounded-xl bg-primary text-primary-content shadow-sm"><svg class="icon size-7"><use href="#i-laptop"/></svg></span>
     <div class="min-w-0 flex-1"><p class="text-xs muted">Máy đang kiểm tra</p><h2 id="machineName" class="text-2xl font-semibold tracking-tight">Đang đọc cấu hình…</h2><div id="machineDetail" class="flex flex-wrap gap-1.5 mt-2"></div></div>
-    <button class="btn btn-sm btn-quiet shrink-0 self-start" id="support">Tra trên Dell<svg class="icon"><use href="#i-external"/></svg></button>
+    <button class="btn btn-sm btn-quiet shrink-0 self-start" id="support">Tra bảo hành<svg class="icon"><use href="#i-external"/></svg></button>
   </div>
   <div id="metrics" class="grid grid-cols-4 gap-3"></div>
   <div id="usageMetrics" class="grid grid-cols-3 gap-3"></div>
@@ -92,9 +92,9 @@
     <article class="panel"><div class="flex justify-between items-center mb-3"><h3 class="panel-title">Điểm cần chú ý</h3><span id="findingCount" class="text-xs muted"></span></div><div id="findings"><p class="text-sm muted py-6 text-center">Chưa có dữ liệu.</p></div></article>
     <article class="panel"><h3 class="panel-title mb-3">Quy trình gợi ý</h3>
       <ol class="space-y-3 text-sm">
-        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">1</span><span>Đối chiếu model, CPU, RAM, ổ và Service Tag với tin rao</span></li>
+        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">1</span><span>Đối chiếu model, CPU, RAM, ổ và số serial với tin rao</span></li>
         <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">2</span><span>Thử màn hình, phím, loa, camera, cổng và pin</span></li>
-        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">3</span><span>Chạy Dell F12 Diagnostics, xem F2 BIOS</span></li>
+        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">3</span><span>Chạy chẩn đoán tích hợp của hãng (F12), xem BIOS (F2)</span></li>
         <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">4</span><span>Ghi kết quả và xuất biên bản</span></li>
       </ol>
       <button class="btn btn-sm btn-quiet btn-block mt-5" data-goto="checklist">Mở biên bản<svg class="icon"><use href="#i-arrow"/></svg></button></article>
@@ -128,31 +128,31 @@
 
 <section id="firmware" class="page space-y-4">
   <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="firmware"></div>
-  <div class="flex items-center justify-between gap-4"><p class="note"><svg class="icon"><use href="#i-info"/></svg>Bảng firmware công bố cho hệ điều hành, không phải toàn bộ chip BIOS. Thiết lập Dell đọc qua WMI nếu model hỗ trợ; ứng dụng chỉ đọc.</p><button class="btn btn-sm btn-quiet shrink-0" id="exportFirmware"><svg class="icon"><use href="#i-download"/></svg>Lưu SMBIOS .bin</button></div>
+  <div class="flex items-center justify-between gap-4"><p class="note"><svg class="icon"><use href="#i-info"/></svg>Bảng firmware công bố cho hệ điều hành, không phải toàn bộ chip BIOS. Ứng dụng chỉ đọc.</p><button class="btn btn-sm btn-quiet shrink-0" id="exportFirmware"><svg class="icon"><use href="#i-download"/></svg>Lưu SMBIOS .bin</button></div>
   <div id="firmwareSections" class="space-y-4"><p class="text-sm muted">Chưa có dữ liệu.</p></div>
 </section>
 
-<section id="dell" class="page space-y-4">
-  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="dell"></div>
-  <div class="grid grid-cols-2 gap-4" id="dellColumns">
+<section id="warranty" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="warranty"></div>
+  <div class="grid grid-cols-2 gap-4" id="warrantyColumns">
     <article class="panel space-y-4">
-      <div class="flex items-center justify-between"><h3 class="panel-title">Service Tag</h3><select id="dellMethod" class="select select-sm w-56"><option value="web">Dell web · không cần khóa</option><option value="techdirect">TechDirect API</option></select></div>
-      <input class="input w-full tag-input" id="dellTag" maxlength="12" autocomplete="off" placeholder="ABC1234" aria-label="Service Tag">
-      <div class="flex items-center justify-between gap-3"><p id="dellIdentity" class="text-xs muted">Đang tự đọc Service Tag từ BIOS…</p><button class="btn btn-xs btn-ghost" id="useCurrentTag" disabled>Dùng Tag máy này</button></div>
-      <button class="btn btn-primary btn-block" id="dellLookup">Tra cứu</button>
-      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-sm" id="dellInFull">Tra trong lượt Test toàn bộ</label>
-      <div class="flex gap-2"><button class="btn btn-sm btn-quiet" id="openDellBrowser">Mở trang Dell trong app</button><button class="btn btn-sm btn-ghost" id="supportFallback">Trình duyệt ngoài<svg class="icon"><use href="#i-external"/></svg></button></div>
-      <p class="note"><svg class="icon"><use href="#i-info"/></svg>Chỉ Service Tag được gửi tới Dell qua HTTPS. HTTP 403 nghĩa là bị chặn, không phải mã sai.</p>
+      <div class="flex items-center justify-between"><h3 class="panel-title">Số serial</h3><select id="warrantyMethod" class="select select-sm w-56"><option value="web">Trang hỗ trợ · không cần khóa</option><option value="api">API bảo hành</option></select></div>
+      <input class="input w-full tag-input" id="warrantyTag" maxlength="12" autocomplete="off" placeholder="ABC1234" aria-label="Số serial">
+      <div class="flex items-center justify-between gap-3"><p id="warrantyIdentity" class="text-xs muted">Đang tự đọc số serial từ BIOS…</p><button class="btn btn-xs btn-ghost" id="useCurrentTag" disabled>Dùng Tag máy này</button></div>
+      <button class="btn btn-primary btn-block" id="warrantyLookup">Tra cứu</button>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-sm" id="warrantyInFull">Tra trong lượt Test toàn bộ</label>
+      <div class="flex gap-2"><button class="btn btn-sm btn-quiet" id="openWarrantyBrowser">Mở trang hỗ trợ trong app</button><button class="btn btn-sm btn-ghost" id="supportFallback">Trình duyệt ngoài<svg class="icon"><use href="#i-external"/></svg></button></div>
+      <p class="note"><svg class="icon"><use href="#i-info"/></svg>Chỉ số serial được gửi tới trang hỗ trợ của hãng qua HTTPS. HTTP 403 nghĩa là bị chặn, không phải mã sai.</p>
     </article>
     <article class="panel space-y-4">
-      <h3 class="panel-title">TechDirect API</h3>
-      <p class="text-xs muted">Cần Client ID / Secret được Dell duyệt cho Warranty API. Khóa chỉ giữ trong RAM của phiên này.</p>
-      <fieldset class="fieldset p-0"><label class="fieldset-label" for="dellClientId">Client ID</label><input class="input w-full" id="dellClientId" type="password" autocomplete="off" maxlength="1024"><label class="fieldset-label mt-2" for="dellSecret">Client Secret</label><input class="input w-full" id="dellSecret" type="password" autocomplete="off" maxlength="4096"></fieldset>
-      <div class="flex gap-2"><button class="btn btn-sm btn-primary" id="dellConnect">Dùng khóa</button><button class="btn btn-sm btn-quiet" id="dellClear">Xóa khóa</button><button class="btn btn-sm btn-ghost ml-auto" data-tool="techdirect">Đăng ký<svg class="icon"><use href="#i-external"/></svg></button></div>
-      <p id="dellAuthStatus" class="text-xs muted">Chưa cấu hình</p>
+      <h3 class="panel-title">API bảo hành</h3>
+      <p class="text-xs muted">Cần Client ID / Secret được duyệt cho Warranty API. Khóa chỉ giữ trong RAM của phiên này.</p>
+      <fieldset class="fieldset p-0"><label class="fieldset-label" for="warrantyClientId">Client ID</label><input class="input w-full" id="warrantyClientId" type="password" autocomplete="off" maxlength="1024"><label class="fieldset-label mt-2" for="warrantySecret">Client Secret</label><input class="input w-full" id="warrantySecret" type="password" autocomplete="off" maxlength="4096"></fieldset>
+      <div class="flex gap-2"><button class="btn btn-sm btn-primary" id="warrantyConnect">Dùng khóa</button><button class="btn btn-sm btn-quiet" id="warrantyClear">Xóa khóa</button><button class="btn btn-sm btn-ghost ml-auto" data-tool="warrantyapi">Đăng ký<svg class="icon"><use href="#i-external"/></svg></button></div>
+      <p id="warrantyAuthStatus" class="text-xs muted">Chưa cấu hình</p>
     </article>
   </div>
-  <div id="dellResults" class="space-y-4"></div>
+  <div id="warrantyResults" class="space-y-4"></div>
 </section>
 
 <section id="battery" class="page space-y-4">
@@ -177,8 +177,10 @@
 
 <section id="input" class="page space-y-4">
   <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="input"></div>
-  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Bàn phím</h3><div class="flex items-center gap-2"><button class="btn btn-xs btn-ghost" id="clearKeys">Xóa dấu</button><button class="btn btn-sm btn-primary" id="keyboardToggle">Bắt đầu thử phím</button></div></div>
+  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Bàn phím</h3><div class="flex items-center gap-2"><select id="kbLayout" class="select select-xs w-44" aria-label="Kiểu bàn phím"><option value="auto">Tự nhận kiểu bàn phím</option><option value="compact">Laptop, không phím số</option><option value="full">Có phím số</option></select><button class="btn btn-xs btn-ghost" id="clearKeys">Xóa dấu</button><button class="btn btn-sm btn-primary" id="keyboardToggle">Bắt đầu thử phím</button></div></div>
     <div id="keyboard" class="outline-offset-4" tabindex="0" aria-label="Vùng kiểm tra bàn phím"></div>
+    <p id="kbInfo" class="text-xs muted"></p>
+    <div id="kbDevices"></div>
     <p class="text-xs"><span id="lastKey" class="muted">Chưa bật thử phím</span></p>
     <p class="note"><svg class="icon"><use href="#i-info"/></svg>Fn, Power, phím Windows và phím media có thể do hệ điều hành giữ lại; hãy thử trực tiếp chức năng.</p></article>
   <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Touchpad / chuột</h3><span id="mouseStats" class="text-xs muted tabular">Trái: 0 · Giữa: 0 · Phải: 0 · Cuộn: 0</span></div><canvas id="pointerPad" aria-label="Kéo chuột để vẽ thử"></canvas></article>
@@ -203,7 +205,7 @@
     <article class="panel flex flex-col gap-3"><div class="flex items-center gap-2"><span class="icon-tile bg-emerald-50 text-emerald-600"><svg class="icon"><use href="#i-drive"/></svg></span><h3 class="panel-title">Ổ đĩa</h3><span class="badge badge-sm bg-base-200 border-0 ml-auto">256 MiB – 16 GiB</span></div><p class="text-xs muted flex-1">Ghi tệp tạm lên ổ đã chọn, đo tốc độ ghi/đọc, so SHA-256 rồi xóa.</p><div class="flex gap-2"><select class="select select-sm flex-1 min-w-0" id="diskTarget" aria-label="Ổ cần thử"></select><select class="select select-sm w-28" data-disk-size aria-label="Dung lượng tệp thử"><option value="256">256 MiB</option><option value="1024">1 GiB</option><option value="4096">4 GiB</option><option value="8192">8 GiB</option><option value="16384">16 GiB</option></select><button class="btn btn-sm btn-quiet" data-test="disk">Chạy</button></div></article>
   </div>
   <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Kết quả</h3><button class="btn btn-xs btn-ghost text-error" id="stopTest" disabled><svg class="icon"><use href="#i-stop"/></svg>Dừng</button></div><progress id="testProgress" class="progress h-1 w-full" max="100" value="0"></progress><p id="testStatus" class="text-xs muted">Chưa chạy bài thử.</p><div id="testResults"></div></article>
-  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Không thay thế Dell F12 Diagnostics. Không quét toàn bộ RAM hay mọi sector ổ đĩa.</p>
+  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Không thay thế bài chẩn đoán tích hợp của hãng (F12 lúc khởi động). Không quét toàn bộ RAM hay mọi sector ổ đĩa.</p>
 </section>
 
 <section id="summary" class="page space-y-4">
@@ -222,8 +224,8 @@
 <section id="checklist" class="page space-y-4">
   <div class="flex items-center justify-between"><div id="checklistSummary" class="flex gap-4 text-sm"></div><button class="btn btn-sm btn-primary" id="exportBottom"><svg class="icon"><use href="#i-download"/></svg>Xuất biên bản HTML</button></div>
   <article class="panel p-0 overflow-hidden"><div class="overflow-x-auto"><table class="table data-table"><thead><tr><th class="w-[42%]">Hạng mục</th><th class="w-[20%]">Kết quả</th><th>Ghi chú</th></tr></thead><tbody id="manualRows"></tbody></table></div></article>
-  <article class="panel space-y-2"><label class="panel-title block" for="notes">Thông tin mua máy</label><textarea id="notes" class="textarea w-full" rows="3" maxlength="20000" placeholder="Giá, người bán, cấu hình đã hứa, bảo hành / đổi trả…"></textarea><p class="note warn"><svg class="icon"><use href="#i-warn"/></svg>Báo cáo chứa Service Tag và thông tin phần cứng. Kiểm tra trước khi chia sẻ.</p></article>
-  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Làm thêm trên máy Dell: F12 → Diagnostics (ghi mã lỗi), F2 → BIOS (Service Tag, Battery Health, AC Adapter, mật khẩu BIOS).</p>
+  <article class="panel space-y-2"><label class="panel-title block" for="notes">Thông tin mua máy</label><textarea id="notes" class="textarea w-full" rows="3" maxlength="20000" placeholder="Giá, người bán, cấu hình đã hứa, bảo hành / đổi trả…"></textarea><p class="note warn"><svg class="icon"><use href="#i-warn"/></svg>Báo cáo chứa số serial và thông tin phần cứng. Kiểm tra trước khi chia sẻ.</p></article>
+  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Làm thêm trên máy: F12 → Diagnostics (ghi mã lỗi), F2 → BIOS (Số serial, Battery Health, AC Adapter, mật khẩu BIOS).</p>
 </section>
 </div>
 </main>

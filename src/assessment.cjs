@@ -2,7 +2,7 @@
 const array = value => Array.isArray(value) ? value : [];
 const data = (report, name) => array(report?.sections?.[name]?.data);
 const number = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) ? Number(value) : null;
-const CYCLE_WARN = 500; // App heuristic, not a Dell specification.
+const CYCLE_WARN = 500; // App heuristic, not a manufacturer specification.
 const DAY = 86400000;
 
 function batteryHealth(battery) {
@@ -282,6 +282,77 @@ function memoryDiagnosticInfo(report) {
   const history = rows.map(r => ({time:r.Time, verdict:verdict(r), message:r.Message || ''})).sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
   return {available:true, last:history[0], history};
 }
+// Grades a write/read test against what the drive type should reach. These are single-queue, 8 MiB sequential
+// numbers, so they sit below the box spec: a healthy PCIe 3 NVMe does ~1.5–3 GB/s here, PCIe 4 ~3–6 GB/s, SATA SSD
+// ~400–550 MB/s, a 2.5" laptop HDD ~80–150 MB/s.
+const DISK_CLASSES = {
+  nvme:{label:'SSD NVMe', expect:'thường ghi 1.000–5.000 MB/s, đọc 1.500–7.000 MB/s', good:[1000, 1500], slow:[400, 800], floor:200},
+  sata:{label:'SSD SATA', expect:'thường ghi và đọc khoảng 350–550 MB/s', good:[300, 400], slow:[150, 200], floor:60},
+  hdd:{label:'ổ cứng HDD', expect:'thường ghi và đọc khoảng 80–200 MB/s', good:[80, 90], slow:[45, 50], floor:20},
+};
+function diskClass(disk) {
+  if (!disk) return null;
+  if (/usb|sd|mmc/i.test(disk.bus || '')) return null;
+  if (disk.protocol === 'nvme' || /nvme/i.test(disk.bus || '')) return 'nvme';
+  if (disk.isSSD || /ssd/i.test(disk.media || '')) return 'sata';
+  if (/hdd|unspecified/i.test(disk.media || '') || disk.rotation && disk.rotation !== 'SSD') return 'hdd';
+  return null;
+}
+function diskSpeedVerdict(metrics, disk) {
+  if (!metrics || metrics.writeMBps == null) return null;
+  const kind = diskClass(disk), c = DISK_CLASSES[kind], points = [];
+  const w = metrics.writeMBps, r = metrics.readMBps, min = metrics.minWriteMBps;
+  points.push({state:'good', text:`Dữ liệu đọc lại khớp từng byte (SHA-256) trên ${metrics.sizeMiB >= 1024 ? `${metrics.sizeMiB / 1024} GiB` : `${metrics.sizeMiB} MiB`}.`});
+  if (!c) return {status:'unknown', label:'Chưa đánh giá', summary:`Không rõ loại ổ${disk?.bus ? ` (${disk.bus})` : ''} nên không so được tốc độ chuẩn.`, expected:null, points};
+  const grade = (v, i) => v >= c.good[i] ? 'good' : v >= c.slow[i] ? 'caution' : 'bad';
+  const wg = grade(w, 0), rg = metrics.readCached ? 'good' : grade(r, 1);
+  const name = {good:'bình thường', caution:'hơi chậm', bad:'chậm bất thường'};
+  points.push({state:wg, text:`Ghi ${w} MB/s: ${name[wg]} với ${c.label}.`});
+  if (metrics.readCached) points.push({state:'caution', text:`Đọc ${r} MB/s có thể đến từ bộ đệm RAM, không dùng để đánh giá.`});
+  else points.push({state:rg, text:`Đọc ${r} MB/s: ${name[rg]} với ${c.label}.`});
+  let sustained = 'good';
+  if (min != null && min < c.floor) { sustained = 'caution'; points.push({state:'caution', text:`Ghi lâu tụt còn ${min} MB/s: bộ đệm nhanh của ổ đã đầy. Thường gặp ở SSD QLC / không DRAM hoặc ổ gần đầy; chép file lớn sẽ chậm.`}); }
+  else if (min != null && kind !== 'hdd' && metrics.maxWriteMBps && min < metrics.maxWriteMBps * 0.4) points.push({state:'good', text:`Tốc độ ghi dao động ${min}–${metrics.maxWriteMBps} MB/s nhưng không tụt dưới ${c.floor} MB/s.`});
+  else if (min != null) points.push({state:'good', text:`Ghi ổn định suốt bài (thấp nhất ${min} MB/s).`});
+  const worst = [wg, rg, sustained].includes('bad') ? 'bad' : [wg, rg, sustained].includes('caution') ? 'caution' : 'good';
+  const label = {good:'Tốt', caution:'Hơi chậm', bad:'Chậm bất thường'}[worst];
+  const summary = worst === 'good' ? `Tốc độ đúng mức của ${c.label}, dữ liệu toàn vẹn.`
+    : worst === 'caution' ? `Chạy được, dữ liệu toàn vẹn, nhưng có điểm chậm hơn ${c.label} thông thường.`
+    : `Chậm hơn nhiều so với ${c.label} khỏe: có thể ổ sắp hỏng, quá nóng, gần đầy hoặc chạy sai chế độ (xem tab Ổ cứng).`;
+  return {status:worst, label, summary, expected:`${c.label} ${c.expect}`, kind, points};
+}
+// Which keyboard to draw. Windows cannot tell which physical keys exist, so this guesses from the chassis (SMBIOS
+// type 3) and the built-in panel size (EDID): desktops and laptops of 15" and up usually have a number pad.
+const DESKTOP_CHASSIS = new Set([3, 4, 5, 6, 7, 13, 15, 16, 17, 23, 24, 35, 36]);
+// Keyboards Windows sees (grouped per physical device by keyboards.ps1). Any of them counts in the key test, so an
+// external keyboard must be unplugged to test the laptop's own. Some mice / receivers also expose a keyboard interface.
+const KB_KIND = {builtin:'Bàn phím gắn liền (laptop)', usb:'Bàn phím USB', bluetooth:'Bàn phím Bluetooth', other:'Thiết bị bàn phím khác'};
+function keyboardDevices(list) {
+  const devices = array(list).map(k => ({kind:k.Kind || 'other', label:KB_KIND[k.Kind] || KB_KIND.other, name:k.Name || null, vidPid:k.VidPid || null, ok:(k.Status || 'OK') === 'OK',
+    title:k.Name || (k.VidPid ? `${KB_KIND[k.Kind] || 'Thiết bị'} ${k.VidPid}` : KB_KIND[k.Kind] || 'Bàn phím')}));
+  const builtin = devices.some(d => d.kind === 'builtin'), external = devices.filter(d => d.kind !== 'builtin');
+  // Name hints only: compact boards often say so in their name; "numpad" / "full size" say the opposite.
+  const hint = external.map(d => /\b(tkl|tenkeyless|mini|compact|60%|65%|75%)\b/i.test(d.name || '') ? 'compact' : /numpad|full[ -]?size/i.test(d.name || '') ? 'full' : null).find(Boolean) || null;
+  const warning = builtin && external.length
+    ? `Đang có ${external.length} bàn phím / thiết bị rời kết nối. Phím nhấn từ thiết bị nào cũng được tính: ngắt bàn phím rời trước khi thử bàn phím laptop.`
+    : !builtin && devices.length > 1 ? `Windows thấy ${devices.length} thiết bị nhận là bàn phím (chuột gaming hay đầu thu không dây cũng có thể nằm trong đây). Phím nhấn từ thiết bị nào cũng được tính.` : null;
+  return {devices, builtin, external:external.length, hint, warning};
+}
+function keyboardGuess(report) {
+  const chassis = number(data(report,'smbiosChassis')[0]?.ChassisType);
+  const panels = data(report,'displays').filter(d => number(d.WidthCm) > 0 && number(d.HeightCm) > 0)
+    .map(d => ({internal:d.Internal === true, inches:Math.round(Math.hypot(number(d.WidthCm), number(d.HeightCm)) / 2.54 * 10) / 10}));
+  const panel = panels.find(p => p.internal) || null;
+  const hint = keyboardDevices(data(report,'keyboards')).hint;
+  if (chassis !== null && DESKTOP_CHASSIS.has(chassis)) return hint === 'compact' ? {layout:'compact', reason:'Máy để bàn, tên bàn phím rời cho thấy loại không phím số.', panelInches:null} : {layout:'full', reason:'Máy để bàn: bàn phím rời thường đủ phím số.', panelInches:null};
+  if (panel) return panel.inches >= 15
+    ? {layout:'full', reason:`Màn hình ${panel.inches.toLocaleString('vi-VN')}": laptop cỡ này thường có phím số.`, panelInches:panel.inches}
+    : {layout:'compact', reason:`Màn hình ${panel.inches.toLocaleString('vi-VN')}": laptop cỡ này thường không có phím số.`, panelInches:panel.inches};
+  if (!panels.length && chassis === null) return {layout:'compact', reason:'Chưa đọc được kiểu máy; mặc định bàn phím laptop.', panelInches:null};
+  return panels.length && !panels.some(p => p.internal)
+    ? {layout:'full', reason:'Chỉ có màn hình rời: thường dùng bàn phím rời đủ phím số.', panelInches:null}
+    : {layout:'compact', reason:'Không đọc được cỡ màn hình laptop; mặc định không có phím số.', panelInches:null};
+}
 function assess(report) {
   const checks = [];
   for (const [key, section] of Object.entries(report?.sections || {})) {
@@ -302,14 +373,14 @@ function assess(report) {
   if (report?.sections?.mdm) checks.push({state:mdm.state,title:`Quản lý thiết bị: ${mdm.label}`,detail:mdm.detail});
   const office = officeInfo(report);
   if (office.verdict !== 'notInstalled' && report?.sections?.office) checks.push({state:office.state,title:`Microsoft Office: ${office.label}`,detail:office.detail});
-  if (usage.windowsInstalled) checks.push({state:'info',title:`Windows cài ngày ${usage.windowsInstalled} (${ago(usage.windowsDays)})`,detail:'Cài lại Windows sẽ đổi ngày này; không phải ngày xuất xưởng. Ngày xuất xưởng Dell xem ở tab Tra Dell (TechDirect).'});
+  if (usage.windowsInstalled) checks.push({state:'info',title:`Windows cài ngày ${usage.windowsInstalled} (${ago(usage.windowsDays)})`,detail:'Cài lại Windows sẽ đổi ngày này; không phải ngày xuất xưởng. Ngày xuất xưởng xem ở tab Tra bảo hành.'});
   checks.push(...batteryChecks(data(report,'battery')), ...storageChecks(array(report?.diskDetails)));
   data(report,'devices').filter(d=>number(d.ConfigManagerErrorCode)>0).forEach(d=>checks.push({state:'warn',title:`Thiết bị: ${d.Name}`,detail:`Mã lỗi Windows ${d.ConfigManagerErrorCode}. Có thể liên quan driver, thiết bị tắt hoặc phần cứng.`}));
   const events = data(report,'events');
   if(events.length) checks.push({state:'warn',title:`Có ${events.length} sự kiện cần xem trong 7 ngày`,detail:'Nhật ký chỉ là dấu hiệu để điều tra; mất điện/driver cũng có thể gây sự kiện. Không kết luận linh kiện hỏng từ mã log.'});
   return checks;
 }
-const api={data,number,batteryHealth,licenseInfo,licenseExpiry,memoryDiagnosticInfo,stabilityInfo,firstUseInfo,officeInfo,mdmInfo,hardwareTruth,memoryInfo,memoryVendor,usageInfo,ago,assess,CYCLE_WARN};
+const api={data,number,batteryHealth,licenseInfo,licenseExpiry,keyboardGuess,keyboardDevices,diskSpeedVerdict,memoryDiagnosticInfo,stabilityInfo,firstUseInfo,officeInfo,mdmInfo,hardwareTruth,memoryInfo,memoryVendor,usageInfo,ago,assess,CYCLE_WARN};
 if(typeof module!=='undefined') module.exports=api;
 else window.assessment=api;
 })();

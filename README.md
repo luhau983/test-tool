@@ -1,40 +1,39 @@
-# Dell Inspect
+# Test tool
 
-Ứng dụng Electron tiếng Việt để kiểm tra laptop Windows cũ trước khi mua. Chạy offline, không cần cài Node.js trên máy được kiểm tra. Không phải phần mềm của Dell.
+Ứng dụng Electron tiếng Việt để kiểm tra laptop Windows cũ trước khi mua. Chạy offline, không cần cài Node.js trên máy được kiểm tra.
 
 ## Chạy ngay
 
-Mở `release/v1.2.0/Dell-Inspect-1.2.0-portable.exe`. Có thể chép tệp EXE vào USB rồi mở trên chiếc laptop định mua. Hỗ trợ Windows 10/11 x64; không dành cho Windows 7 hay ARM64.
+Mở `release/v1.2.0/Test-tool-1.2.0-portable.exe`. Có thể chép tệp EXE vào USB rồi mở trên chiếc laptop định mua. Hỗ trợ Windows 10/11 x64; không dành cho Windows 7 hay ARM64.
 
-1. Cắm sạc, lưu công việc. Khi mở, ứng dụng tự quét cấu hình và điền Service Tag Dell đọc từ BIOS / SMBIOS. Đợi quét xong rồi bấm **Test toàn bộ**. Nếu đang tra một máy khác, có thể nhập mã riêng hoặc bấm **Dùng Tag máy này** để trở về mã của máy đang chạy. Máy không phải Dell sẽ được báo rõ, không lấy serial của hãng khác làm Service Tag Dell.
+1. Cắm sạc, lưu công việc. Khi mở, ứng dụng tự quét cấu hình và điền số serial đọc từ BIOS / SMBIOS. Đợi quét xong rồi bấm **Test toàn bộ**. Nếu đang tra một máy khác, có thể nhập mã riêng hoặc bấm **Dùng Tag máy này** để trở về mã của máy đang chạy.
 2. Ứng dụng đọc cấu hình/firmware rồi chấm sức khỏe ổ cứng (S.M.A.R.T.), chạy CPU 1 luồng 15 giây, RAM 64 MiB và thử ghi/đọc tệp 256 MiB có đo tốc độ. Bài thử ổ chạy lần lượt trên mọi ổ có ký tự ổ đĩa, không cần chọn thư mục.
 3. Làm theo hướng dẫn màn hình, bàn phím, touchpad, loa, micro, webcam và pin; ở mỗi bước bấm **Đạt**, **Có lỗi** hoặc **Bỏ qua**. Ứng dụng không tự chấm đạt: chỉ lựa chọn của người thử được ghi vào biên bản. Kết thúc (hoặc bấm Dừng) sẽ mở trang **Kết quả lượt test**: số bước đạt / lỗi / bỏ qua, thời gian, ghi nhận từng bước (số phím đã nhận, số click, điểm ảnh nghi ngờ, kết quả CPU/RAM/ổ) và cấu hình máy. Thống kê này được đưa vào báo cáo HTML.
 4. Trong biên bản, ghi kết quả thử từng cổng, mạng, pin, sạc, BIOS và ngoại hình. Xuất báo cáo HTML. Có thể mở bằng trình duyệt và in thành PDF.
 5. Tab **Pin & sạc** hiển thị thiết kế / sạc đầy / độ chai / chu kỳ từ `powercfg`, trạng thái nguồn từ `GetSystemPowerStatus`, điện áp và công suất tức thời nếu `root/wmi BatteryStatus` cung cấp. Có thể chọn 2/10/30 phút, ghi điều kiện thử, rút sạc rồi bấm test. Lấy mẫu khoảng mỗi 15 giây cộng thời gian đọc thiết bị; ghi % bắt đầu/kết thúc, điểm % giảm, thời gian thực tế và biểu đồ, không dự đoán thời lượng chính xác. Không có pin hoặc thiếu dữ liệu thì không bắt đầu. Cắm sạc, gián đoạn trên 45 giây hoặc mức pin ≤5% sẽ kết thúc theo dõi; app không can thiệp cơ chế nguồn hay ngăn máy sập nếu pin lỗi. Dừng test pin trước khi đóng app.
 6. Tab **Màn hình** có **Tự chạy màu test điểm chết**, tự đổi 7 màu/mẫu mỗi 3 giây. Click vị trí nghi ngờ để ghi tọa độ tham khảo; Esc thoát. Đây là quan sát của người kiểm tra, không phải phát hiện điểm chết vật lý tự động. Tọa độ CSS và DPR không bảo đảm trùng pixel vật lý trên panel. Không có vị trí đánh dấu không có nghĩa màn hình đạt.
-7. Lưu báo cáo trước khi thoát / khởi động lại; dữ liệu đánh dấu chỉ giữ trong phiên ứng dụng, không tự lưu. Chạy Dell F12 → Diagnostics và F2 → BIOS riêng với người bán. Khởi động lại ứng dụng sẽ bắt đầu một phiên mới.
+7. Lưu báo cáo trước khi thoát / khởi động lại; dữ liệu đánh dấu chỉ giữ trong phiên ứng dụng, không tự lưu. Chạy bài chẩn đoán tích hợp của hãng (thường F12 lúc khởi động) và xem BIOS (thường F2) cùng người bán. Khởi động lại ứng dụng sẽ bắt đầu một phiên mới.
 
-## Tra Dell theo Service Tag
+## Tra bảo hành theo số serial
 
-Tab **Tra Dell API** có các cách:
+Tab **Tra bảo hành** có hai cách. Địa chỉ máy chủ của hãng chỉ nằm trong `src/warranty-web.cjs` và `src/warranty-api.cjs`.
 
-- **Dell web · không cần khóa** (mặc định): POST đến `https://www.dell.com/support/assetdiscovery/en-vn/validate/asset`, với `Selection`, `appName=warranty` và các cờ tìm kiếm của website. Đây là endpoint web nhận diện / xác thực mã, không phải hợp đồng API TechDirect được bảo đảm ổn định. App hiện các trường JSON thực tế trả về, không tự suy đoán model hay bảo hành từ HTTP 200. Endpoint có thể chỉ trả thông tin định tuyến; nếu cần bảo hành đầy đủ, tra trang Dell hoặc dùng TechDirect.
-- Nếu endpoint web bị HTTP 403, app báo yêu cầu bị chặn, không gọi mã máy là sai. Có nút **Mở trang Dell trong app** để xem trực tiếp trong một cửa sổ website không có Node/preload, tách khỏi giao diện local. Cửa sổ này và request web dùng chung một session chỉ ở RAM; không nhúng cookie sao chép từ Chrome vào mã nguồn hay bản EXE. Không bảo đảm mở website sẽ làm API hết bị chặn. Nút mở trình duyệt ngoài vẫn có sẵn.
-- Có khóa: nhập Client ID và Client Secret đã được Dell TechDirect phê duyệt cho **Warranty API**, bấm dùng khóa cho phiên, rồi tra model / ngày xuất xưởng / quốc gia / từng dịch vụ bảo hành. Có tùy chọn tra trong lượt Test toàn bộ; mặc định tắt. API chính thức không phải API truy cập ẩn danh. Đăng ký ở [Dell TechDirect](https://techdirect.dell.com/).
+- **Trang hỗ trợ · không cần khóa** (mặc định): gửi số serial tới endpoint nhận diện mã máy của trang hỗ trợ (`WEB_URL`). Đây là endpoint web, không phải API được bảo đảm ổn định. App hiện các trường JSON thực tế trả về, không tự suy đoán model hay bảo hành từ HTTP 200.
+- Nếu endpoint web bị HTTP 403, app báo yêu cầu bị chặn, không gọi mã máy là sai. Có nút **Mở trang hỗ trợ trong app** để xem trực tiếp trong một cửa sổ không có Node/preload, tách khỏi giao diện local, dùng session chỉ ở RAM. Nút mở trình duyệt ngoài vẫn có sẵn.
+- **API bảo hành** (có khóa): nhập Client ID và Client Secret đã được hãng duyệt cho Warranty API, bấm dùng khóa cho phiên, rồi tra model / ngày xuất xưởng / quốc gia / từng dịch vụ bảo hành. Nút **Đăng ký** mở cổng cấp khóa (`PORTAL_URL`). Có tùy chọn tra trong lượt Test toàn bộ; mặc định tắt.
 
-OAuth POST `https://apigtwb2c.us.dell.com/auth/oauth/v2/token`; dữ liệu GET `https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements?servicetags=...`. Khóa chỉ ở RAM của main process; token được cache đến gần hạn. Không nhúng khóa trong EXE, lưu ra đĩa, hoặc xuất ra báo cáo. Khi đóng app phải nhập lại. Nếu chia sẻ app thì người dùng khác phải có quyền API riêng. Không nhập khóa bí mật vào chat.
+Khóa chỉ ở RAM của main process; token được cache đến gần hạn. Không nhúng khóa trong EXE, lưu ra đĩa, hoặc xuất ra báo cáo. Khi đóng app phải nhập lại. Không nhập khóa bí mật vào chat.
 
-Chỉ khi bạn bấm tra / chọn tra trong Test toàn bộ, Service Tag và yêu cầu xác thực mới được gửi đến Dell qua HTTPS. Không gửi cấu hình quét hay ảnh/âm thanh. Kết quả API được đưa vào báo cáo, có thời điểm tra và mã máy đã tra; có thể khác mã máy đang kiểm tra. Không có dữ liệu / bị từ chối / hết hạn truy cập được báo rõ, không biến thành “hết bảo hành”. API Warranty không được dùng để khẳng định toàn bộ cấu hình CPU/RAM/SSD xuất xưởng hay linh kiện hiện tại. Chưa xác minh bằng tài khoản TechDirect thật nếu chưa có khóa được duyệt; các kiểm thử API dùng phản hồi mô phỏng.
+Chỉ khi bạn bấm tra / chọn tra trong Test toàn bộ, số serial và yêu cầu xác thực mới được gửi đi qua HTTPS. Không gửi cấu hình quét hay ảnh/âm thanh. Kết quả được đưa vào báo cáo, có thời điểm tra và mã máy đã tra. Không có dữ liệu / bị từ chối / hết hạn truy cập được báo rõ, không biến thành “hết bảo hành”. Chưa xác minh bằng tài khoản API thật nếu chưa có khóa được duyệt; các kiểm thử API dùng phản hồi mô phỏng.
 
-Nếu Windows hoặc phần mềm bảo vệ của người bán không cho phép chạy tệp EXE chưa ký số, không tắt bảo vệ để chạy. Thống nhất với người bán và dùng các bài chẩn đoán có sẵn của Dell. Bản build cá nhân chưa có chữ ký nhà phát hành.
+Nếu Windows hoặc phần mềm bảo vệ của người bán không cho phép chạy tệp EXE chưa ký số, không tắt bảo vệ để chạy; dùng các bài chẩn đoán có sẵn của hãng. Bản build cá nhân chưa có chữ ký nhà phát hành.
 
 ## Cấu hình và firmware
 
-- Quét trực tiếp máy đang chạy: CPU, RAM, GPU/driver/độ phân giải, máy/mainboard/BIOS/Service Tag, ổ và phân vùng, pin, thiết bị âm thanh/camera/Bluetooth/USB/mạng, Secure Boot/TPM và nhật ký hệ thống có chọn lọc.
-- Hãng / model / Service Tag / BIOS / mainboard / CPU / khe RAM chỉ lấy từ bảng SMBIOS thô, không dùng Windows CIM (`Win32_ComputerSystem`, `Win32_BIOS`, `Win32_BaseBoard`, `Win32_Processor`, `Win32_PhysicalMemory`). Đọc SMBIOS lỗi thì các mục này hiện chưa xác định, không lấy dữ liệu Windows thay thế.
+- Quét trực tiếp máy đang chạy: CPU, RAM, GPU/driver/độ phân giải, máy/mainboard/BIOS/số serial, ổ và phân vùng, pin, thiết bị âm thanh/camera/Bluetooth/USB/mạng, Secure Boot/TPM và nhật ký hệ thống có chọn lọc.
+- Hãng / model / số serial / BIOS / mainboard / CPU / khe RAM chỉ lấy từ bảng SMBIOS thô, không dùng Windows CIM (`Win32_ComputerSystem`, `Win32_BIOS`, `Win32_BaseBoard`, `Win32_Processor`, `Win32_PhysicalMemory`). Đọc SMBIOS lỗi thì các mục này hiện chưa xác định, không lấy dữ liệu Windows thay thế.
 - **BIOS / SMBIOS:** `GetSystemFirmwareTable(RSMB)` đọc bảng firmware thô do Windows cung cấp; giải mã Type 0/1/2/3/4/16/17/22. Bảng tất cả cấu trúc giữ lại type, handle, phần byte định dạng và chuỗi, kể cả type OEM chưa giải mã. Có nút xuất chính xác bộ byte RSMB `.bin`, bao gồm header Windows 8 byte.
 - Thông số khe RAM và mức tối đa do firmware báo có thể thiếu/sai hoặc khác giới hạn hỗ trợ của model. Số liệu BIOS không tự chứng minh máy chưa sửa hay pin/ổ chính hãng.
-- Thiết lập Dell được đọc từ WMI `root/dcim/sysman/biosattributes` nếu có provider. Không ghi thiết lập, không gọi API thay BIOS, không đọc/bỏ qua mật khẩu. Máy không hỗ trợ hoặc không đủ quyền sẽ hiện chưa xác định. Không tự cài Dell Command Monitor.
 - Bộ đếm ổ không đọc được thì để trống, không biến thành 0. `Healthy` của Windows chỉ dùng khi ổ không tự báo gì.
 
 ## Windows
@@ -46,7 +45,7 @@ Tab **Windows**: phiên bản (Edition, 25H2, build), ngày cài, khởi động
 - **Microsoft Office**: *Office bản quyền* / *Microsoft 365 (thuê bao)* / *Có dấu hiệu crack* / *Nghi crack (KMS)* / *Bản quyền doanh nghiệp* / *Chưa kích hoạt*. Bằng chứng: sppc.dll giả trong thư mục Office (Ohook), dấu vết công cụ crack, khóa Volume (GVLK) trên máy không thuộc domain kèm các yêu cầu KMS gửi tới máy chủ bên ngoài (đọc từ nhật ký SPP, sự kiện 12288).
 - **Quản lý thiết bị (MDM)**: *Đăng ký Autopilot của tổ chức* (cài lại Windows vẫn bị bắt đăng nhập tài khoản công ty — nặng nhất) / *Đang bị quản lý (MDM)* (Intune…) / *Gia nhập tổ chức* (Azure AD / domain) / *Có phần mềm quản lý từ xa* (SCCM, Absolute, NinjaRMM, ManageEngine…) / *Không bị quản lý*. Nguồn: `dsregcmd /status`, `HKLM\SOFTWARE\Microsoft\Enrollments`, `Provisioning\Diagnostics\Autopilot`, danh sách dịch vụ — tất cả chỉ đọc.
 
-- **Đối chiếu Windows ↔ phần cứng**: những gì Windows lấy từ registry (sửa được bằng regedit) được đọc lại từ nguồn không sửa được rồi so: CPU từ CPUID (kernel), Edition từ mã SKU bản quyền, build từ RtlGetVersion, card đồ họa từ PCI ID, model ổ từ lệnh IDENTIFY của ổ, khóa OEM từ bảng ACPI MSDM trong BIOS (chỉ hiện 5 ký tự cuối). App hiển thị giá trị thật; mục nào khác Windows bị đánh dấu "bị sửa". Model, Service Tag, BIOS, RAM vẫn đọc từ bảng SMBIOS như trước.
+- **Đối chiếu Windows ↔ phần cứng**: những gì Windows lấy từ registry (sửa được bằng regedit) được đọc lại từ nguồn không sửa được rồi so: CPU từ CPUID (kernel), Edition từ mã SKU bản quyền, build từ RtlGetVersion, card đồ họa từ PCI ID, model ổ từ lệnh IDENTIFY của ổ, khóa OEM từ bảng ACPI MSDM trong BIOS (chỉ hiện 5 ký tự cuối). App hiển thị giá trị thật; mục nào khác Windows bị đánh dấu "bị sửa". Model, số serial, BIOS, RAM vẫn đọc từ bảng SMBIOS như trước.
 
 ## RAM
 
@@ -91,28 +90,28 @@ Tab **Ổ cứng** hiển thị từng ổ dạng tab: ô *Tình trạng sức k
   - Máy chủ KMS là localhost / IP nội bộ trên máy không thuộc domain (giả lập KMS).
   - Khóa KMS (GVLK) trên máy không thuộc domain → nghi crack KMS online; thuộc domain → bản quyền doanh nghiệp.
   - Giới hạn: kích hoạt HWID trái phép trông giống hệt bản quyền số thật, app không loại trừ được hoàn toàn. Dấu vết đã bị xóa sạch cũng không phát hiện được.
-- Pin dùng `powercfg /batteryreport /xml`; chai = `max(0, 100 − FullChargeCapacity/DesignCapacity × 100)`. Ngưỡng 30% chỉ là gợi ý của app, không phải tiêu chuẩn Dell. Dữ liệu bất thường/thiếu được giữ chưa xác định. Không dự đoán thời lượng từ độ chai.
+- Pin dùng `powercfg /batteryreport /xml`; chai = `max(0, 100 − FullChargeCapacity/DesignCapacity × 100)`. Ngưỡng 30% chỉ là gợi ý của app, không phải tiêu chuẩn của hãng. Dữ liệu bất thường/thiếu được giữ chưa xác định. Không dự đoán thời lượng từ độ chai.
 - Tên các cột kỹ thuật giữ nguyên để dễ đối chiếu nguồn. Băng thông, nhiệt độ CPU/GPU, VRAM chính xác, số giờ dùng máy tổng cộng, lịch sử sửa chữa, BIOS password, mọi chức năng cổng và quyền sở hữu không được khẳng định tự động.
 
 ## Giới hạn bài thử
 
-Không có phần mềm Windows nào kiểm tra tuyệt đối toàn bộ máy. CPU chỉ tải 1 luồng ngắn; RAM chỉ một vùng nhớ của ứng dụng (có thể nằm trong bộ nhớ ảo); ổ chỉ thử một tệp có thể qua cache. Không quét mọi sector, không stress GPU, không đo nhiệt độ CPU và không thay thế Dell ePSA / chẩn đoán RAM sâu. Từng chức năng chỉ xác nhận được bằng điều kiện thử phù hợp.
+Không có phần mềm Windows nào kiểm tra tuyệt đối toàn bộ máy. CPU chỉ tải 1 luồng ngắn; RAM chỉ một vùng nhớ của ứng dụng (có thể nằm trong bộ nhớ ảo); ổ chỉ thử một tệp có thể qua cache. Không quét mọi sector, không stress GPU, không đo nhiệt độ CPU và không thay thế bài chẩn đoán tích hợp của hãng. Từng chức năng chỉ xác nhận được bằng điều kiện thử phù hợp.
 
-Loa có âm kiểm tra 1 giây ở mức tín hiệu thấp; vẫn phải tự chỉnh âm lượng Windows phù hợp. Webcam/mic có danh sách chọn và dò lại thiết bị; chỉ bật khi bấm nút, tự tắt khi đổi tab trong app hoặc app bị ẩn. Bản ghi micro giữ trong RAM để nghe lại, không xuất trong báo cáo. Không có telemetry hoặc upload ảnh/âm thanh; kết nối Dell chỉ theo hành động tra cứu đã mô tả trên.
+Loa có âm kiểm tra 1 giây ở mức tín hiệu thấp; vẫn phải tự chỉnh âm lượng Windows phù hợp. Webcam/mic có danh sách chọn và dò lại thiết bị; chỉ bật khi bấm nút, tự tắt khi đổi tab trong app hoặc app bị ẩn. Bản ghi micro giữ trong RAM để nghe lại, không xuất trong báo cáo. Không có telemetry hoặc upload ảnh/âm thanh; kết nối tra bảo hành chỉ theo hành động tra cứu đã mô tả trên.
 
 App chạy quyền người dùng thường; chỉ trình đọc SMART của ổ SATA xin quyền quản trị qua hộp thoại UAC (xem mục Ổ cứng). Không chỉnh BIOS, registry, driver, dịch vụ hoặc tự khởi động lại. Bài thử ổ tạo một thư mục tên ngẫu nhiên trên ổ cần thử (thư mục Temp nếu là ổ hệ thống, gốc ổ với ổ khác) rồi xóa ngay sau bài thử; ghi tạm 256 MiB – 16 GiB tùy lựa chọn (cần trống thêm 1 GiB), ghi thẳng xuống ổ (write-through) và lấy mẫu tốc độ suốt quá trình để thấy lúc bộ đệm SLC của SSD đầy. Tốc độ đọc có thể đến từ bộ nhớ đệm Windows nên chỉ để tham khảo.
 
 ## Phát triển / build
 
 ```text
-npm ci
-npm start
-npm test
-npm run test:e2e
-npm run dist
+pnpm install --frozen-lockfile
+pnpm start
+pnpm test
+pnpm test:e2e
+pnpm dist
 ```
 
-Node.js 22.12+; Electron, electron-builder, Tailwind CSS và daisyUI khóa phiên bản trong package-lock.json. Giao diện dùng component [daisyUI](https://daisyui.com/components/) (theme `inspect` trong `styles/app.css`); `npm run build:css` biên dịch ra `src/app.css` để app chạy offline, không tải CSS từ CDN. `npm start` và `npm run dist` tự build CSS trước. Nếu môi trường bỏ qua install script, chạy `node node_modules/electron/install.js` để tải runtime trước khi mở app. Giữ `src/collect.ps1` dạng UTF-8 **có BOM** để tương thích Windows PowerShell 5.1. Mã nguồn `src/`, kiểm thử `tests/`. `npm run test:e2e` chạy app Electron thật ở chế độ ẩn và thử toàn bộ chức năng (quét, Test toàn bộ + thống kê, CPU/RAM/ổ, màn hình, bàn phím, touchpad, âm thanh/camera, pin, tra Dell, biên bản, bảo mật IPC); dialog, liên kết ngoài và Dell được giả lập nên không gửi gì ra mạng.
+Node.js 22.12+; Electron, electron-builder, Tailwind CSS và daisyUI khóa phiên bản trong pnpm-lock.yaml (dùng [pnpm](https://pnpm.io/) 10, phiên bản ghi ở `packageManager` trong package.json; `corepack enable` để tự dùng đúng bản). Giao diện dùng component [daisyUI](https://daisyui.com/components/) (theme `inspect` trong `styles/app.css`); `pnpm build:css` biên dịch ra `src/app.css` để app chạy offline, không tải CSS từ CDN. `pnpm start` và `pnpm dist` tự build CSS trước. Electron 45 tự tải runtime ở lần chạy đầu (không cần install script); `pnpm-workspace.yaml` ghi các install script được bỏ qua có chủ đích. Giữ `src/collect.ps1` dạng UTF-8 **có BOM** để tương thích Windows PowerShell 5.1. Mã nguồn `src/`, kiểm thử `tests/`. `pnpm test:e2e` chạy app Electron thật ở chế độ ẩn và thử toàn bộ chức năng (quét, Test toàn bộ + thống kê, CPU/RAM/ổ, màn hình, bàn phím, touchpad, âm thanh/camera, pin, tra bảo hành, biên bản, bảo mật IPC); dialog, liên kết ngoài và máy chủ bảo hành được giả lập nên không gửi gì ra mạng.
 
 Renderer tắt Node integration, bật sandbox/context isolation, CSP giới hạn tài nguyên nội bộ. IPC chỉ cho phép các lệnh cố định từ trang local chính. Báo cáo escape dữ liệu; raw scan và media không được tự gửi đi.
 
@@ -120,8 +119,5 @@ Renderer tắt Node integration, bật sandbox/context isolation, CSP giới h�
 
 - [Microsoft GetSystemFirmwareTable](https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemfirmwaretable)
 - [DMTF SMBIOS specification](https://www.dmtf.org/standards/smbios)
-- [Dell BIOS WMI attributes](https://downloads.dell.com/manuals/common/dell-agentless-client-manageability.pdf)
 - [Microsoft storage reliability counters](https://learn.microsoft.com/en-us/powershell/module/storage/get-storagereliabilitycounter)
 - [Microsoft powercfg](https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options)
-- [Dell F12 Diagnostics](https://www.dell.com/support/kbdoc/en-us/000181163/how-to-enter-the-built-in-diagnostics-32-bit-diagnostics-supportassist-epsa-epsa-and-psa)
-- [Dell F2 battery / adapter](https://www.dell.com/support/contents/en-us/videos/videoplayer/check-ac-adapter-and-battery-status-in-bios/6176627522001)

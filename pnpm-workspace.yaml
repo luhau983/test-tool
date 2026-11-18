@@ -1,0 +1,7 @@
+# pnpm 10 blocks dependency install scripts unless approved. None are needed here
+# (Electron 45 downloads its binary on first run, not at install):
+# @parcel/watcher: only for `tailwindcss --watch` (a prebuilt binary ships anyway).
+# electron-winstaller: Squirrel installer support, unused for the portable build.
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - electron-winstaller

@@ -109,15 +109,14 @@ public static class TruthReader {
         RegEditionID = $cv.EditionID; RegProductName = $cv.ProductName; RegBuild = $cv.CurrentBuild; RegUBR = $cv.UBR
     }
 }
-Section 'dellBios' {
-    $rows = @(); $failures = @()
-    foreach ($class in @('EnumerationAttribute','IntegerAttribute','StringAttribute')) {
-        try { $rows += @(Cim $class 'root/dcim/sysman/biosattributes' | Select-Object AttributeName,CurrentValue,DefaultValue,@{n='PossibleValue';e={$_.PossibleValue -join ', '}}) }
-        catch { $failures += ($class + ': ' + $_.Exception.Message) }
+Section 'keyboards' { . (Join-Path $PSScriptRoot 'keyboards.ps1'); Get-Keyboards }
+Section 'displays' {
+    # Physical panel size from EDID (cm) and how it is connected; VideoOutputTechnology 0x80000000 = built-in panel.
+    $conn = @{}; Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorConnectionParams -ErrorAction SilentlyContinue | ForEach-Object { $conn[$_.InstanceName] = [int64]$_.VideoOutputTechnology }
+    Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBasicDisplayParams -ErrorAction Stop | Where-Object { $_.Active } | ForEach-Object {
+        $tech = $conn[$_.InstanceName]
+        [pscustomobject]@{ Instance = $_.InstanceName; WidthCm = [int]$_.MaxHorizontalImageSize; HeightCm = [int]$_.MaxVerticalImageSize; Internal = ($tech -eq 2147483648 -or $tech -eq -2147483648); Output = $tech }
     }
-    if ($failures.Count) { $rows += [pscustomobject]@{AttributeName='[Provider không hỗ trợ / đọc một phần]';CurrentValue=($failures -join ' | ');DefaultValue=$null;PossibleValue=$null} }
-    if ($rows.Count -eq 1 -and $failures.Count -eq 3) { throw ($failures -join ' | ') }
-    $rows
 }
 Section 'usb' { PnP | Where-Object {$_.PNPDeviceID -like 'USB*'} | Select-Object Name,PNPClass,Status,ConfigManagerErrorCode,PNPDeviceID }
 Section 'security' {
@@ -285,7 +284,7 @@ Section 'hotfixes' {
 }
 Section 'gpu' { Cim 'Win32_VideoController' | Select-Object Name,DriverVersion,CurrentHorizontalResolution,CurrentVerticalResolution,CurrentRefreshRate,VideoModeDescription }
 Section 'battery' {
-    $temp = Join-Path ([IO.Path]::GetTempPath()) ('dell-inspect-battery-' + [guid]::NewGuid().ToString('N') + '.xml')
+    $temp = Join-Path ([IO.Path]::GetTempPath()) ('test-tool-battery-' + [guid]::NewGuid().ToString('N') + '.xml')
     try {
         $p = Start-Process -FilePath "$env:SystemRoot/System32/powercfg.exe" -ArgumentList @('/batteryreport','/xml','/output',('"' + $temp + '"')) -WindowStyle Hidden -PassThru
         if (-not $p.WaitForExit(15000)) { $p.Kill(); throw 'powercfg timed out (15s)' }

@@ -7,14 +7,15 @@ const os = require('node:os');
 const {pathToFileURL} = require('node:url');
 const {makeReport} = require('./report.cjs');
 const {enrichFirmware} = require('./smbios.cjs');
+const {diskSpeedVerdict} = require('./assessment.cjs');
 const {enrichDisks} = require('./disk-health.cjs');
 const {enrichUsage} = require('./usage-history.cjs');
-const {DellClient,validateTag} = require('./dell-api.cjs');
-const {DellWebClient} = require('./dell-web.cjs');
+const {WarrantyApiClient,validateTag,PORTAL_URL} = require('./warranty-api.cjs');
+const {WarrantyWebClient,SUPPORT_HOST,supportPageURL} = require('./warranty-web.cjs');
 const {summarizeBattery} = require('./battery-analysis.cjs');
 
-const dellClient=new DellClient();
-let dellWebClient,dellResult=null,dellWebResult=null,dellBusy=false,dellBrowser=null;
+const warrantyClient=new WarrantyApiClient();
+let warrantyWebClient,warrantyResult=null,warrantyWebResult=null,warrantyBusy=false,supportWindow=null;
 let batteryTest=null,batteryTimer=null,batterySamplePromise=null,batteryStarting=false;
 let win,scan=null,scanning=false,running=null;
 const diagnostics=[];
@@ -24,7 +25,7 @@ const resource=name=>path.join(__dirname,name).replace('app.asar'+path.sep,'app.
 const psPath=path.join(process.env.SystemRoot || 'C:\\Windows','System32','WindowsPowerShell','v1.0','powershell.exe');
 const parseJSON=text=>JSON.parse(text.replace(/^\uFEFF/,''));
 const allowedStates=['Chưa thử','Đạt','Có lỗi','Không có / bỏ qua'];
-const externalLinks={network:'ms-settings:network-wifi',bluetooth:'ms-settings:bluetooth',sound:'ms-settings:sound',camera:'ms-settings:privacy-webcam',microphone:'ms-settings:privacy-microphone',display:'ms-settings:display',activation:'ms-settings:activation',windowsupdate:'ms-settings:windowsupdate',accounts:'ms-settings:otherusers',recovery:'ms-settings:recovery',about:'ms-settings:about',defender:'windowsdefender:',workplace:'ms-settings:workplace',techdirect:'https://techdirect.dell.com/'};
+const externalLinks={network:'ms-settings:network-wifi',bluetooth:'ms-settings:bluetooth',sound:'ms-settings:sound',camera:'ms-settings:privacy-webcam',microphone:'ms-settings:privacy-microphone',display:'ms-settings:display',activation:'ms-settings:activation',windowsupdate:'ms-settings:windowsupdate',accounts:'ms-settings:otherusers',recovery:'ms-settings:recovery',about:'ms-settings:about',defender:'windowsdefender:',workplace:'ms-settings:workplace',warrantyapi:PORTAL_URL};
 const BATTERY_INTERVAL=15000;
 
 function notify(channel,payload) { if(win && !win.isDestroyed()) win.webContents.send(channel,payload); }
@@ -112,7 +113,7 @@ async function collect() {
   if(scanning) throw Error('Đang quét, vui lòng chờ.');
   if(running) throw Error('Hãy dừng bài thử trước khi quét.');
   scanning=true;
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dell-inspect-scan-'));
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'test-tool-scan-'));
   try {
     const output=path.join(dir,'scan.json');
     // collect.ps1 prints each Section name as it starts, which drives the progress bar.
@@ -131,7 +132,7 @@ async function readSmartElevated() {
   if(!scan) throw Error('Hãy quét máy trước khi đọc bảng SMART.');
   if(scanning || running) throw Error('Đợi quét hoặc bài thử hiện tại kết thúc.');
   scanning=true;
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dell-inspect-smart-'));
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'test-tool-smart-'));
   try {
     const output=path.join(dir,'smart.json'),script=resource('smart.ps1');
     if(/["'`$]/.test(script+output+psPath)) throw Error('Đường dẫn ứng dụng có ký tự đặc biệt, không chạy được bằng quyền quản trị.');
@@ -166,7 +167,7 @@ async function diskTempDir(drive,sizeMiB) {
   const stats=await fs.statfs(base);
   const need=(sizeMiB+1024)*1024*1024;
   if(stats.bavail*stats.bsize<need) throw Error(`Ổ ${drive} cần trống ít nhất ${Math.ceil(need/1073741824)} GiB để thử ${sizeMiB>=1024?sizeMiB/1024+' GiB':sizeMiB+' MiB'}.`);
-  try { return await fs.mkdtemp(path.join(base,'dell-inspect-test-')); }
+  try { return await fs.mkdtemp(path.join(base,'test-tool-test-')); }
   catch(error) { throw Error(`Không tạo được thư mục tạm trên ổ ${drive}: ${error.message}`); }
 }
 function runWorker(kind,tempDir,job,sizeMiB=256) {
@@ -206,6 +207,11 @@ async function runDiagnostic(kind,drive,sizeMiB=256) {
     const size=sizeMiB>=1024?`${+(sizeMiB/1024).toFixed(1)} GiB`:`${sizeMiB} MiB`;
     const title=kind==='disk'?`Ổ đĩa ${drive} · ghi/đọc ${size}, đo tốc độ`:kind==='memoryDeep'?`RAM · thử sâu ${size}, 5 bài`:diagnosticTitles[kind];
     const record={title,...(kind==='disk'?{drive}:{}),at:new Date().toISOString(),...await runWorker(kind,tempDir,job,sizeMiB)};
+    if(kind==='disk' && record.metrics){
+      const disk=(scan?.diskDetails || []).find(d=>String(d.driveLetters || '').split(/\s+/).includes(drive));
+      record.verdict=diskSpeedVerdict(record.metrics,disk);
+      if(record.verdict)record.detail=`${record.verdict.label}: ${record.verdict.summary} ${record.detail}`;
+    }
     diagnostics.push(record);
     return record;
   } finally {
@@ -214,52 +220,52 @@ async function runDiagnostic(kind,drive,sizeMiB=256) {
   }
 }
 
-// ---- Dell lookups ----
-// Service Tag as published by firmware (SMBIOS Type 1), not via Windows CIM.
+// ---- Warranty lookups ----
+// Serial number as published by firmware (SMBIOS Type 1), not via Windows CIM.
 const firmwareTag=()=>String(scan?.sections?.smbiosSystem?.data?.[0]?.SerialNumber || '').trim().toUpperCase();
 function withFirmwareMatch(result,requested) {
   const tag=firmwareTag();
   return {...result,firmwareTag:tag,matchesFirmware:tag?tag===requested:null};
 }
-async function dellExclusive(task) {
-  if(dellBusy)throw Error('Đang tra Dell. Vui lòng chờ.');
-  dellBusy=true;
-  try{return await task();}finally{dellBusy=false;}
+async function warrantyExclusive(task) {
+  if(warrantyBusy)throw Error('Đang tra bảo hành. Vui lòng chờ.');
+  warrantyBusy=true;
+  try{return await task();}finally{warrantyBusy=false;}
 }
-function dellWebLookup(tag) {
+function warrantyWebLookup(tag) {
   const requested=validateTag(tag);
-  return dellExclusive(async()=>{
+  return warrantyExclusive(async()=>{
     try{
-      const result=await dellWebClient.lookup(requested);
-      dellWebResult={status:'ok',data:[{Field:'ServiceTag gửi tra',Value:requested},{Field:'QueriedAt',Value:result.queriedAt},{Field:'Source',Value:result.source},...result.fields],error:null};
+      const result=await warrantyWebClient.lookup(requested);
+      warrantyWebResult={status:'ok',data:[{Field:'Số serial gửi tra',Value:requested},{Field:'QueriedAt',Value:result.queriedAt},{Field:'Source',Value:result.source},...result.fields],error:null};
       return withFirmwareMatch(result,requested);
-    }catch(error){dellWebResult={status:'unknown',data:[],error:`${requested}: ${error.message}`};throw error;}
+    }catch(error){warrantyWebResult={status:'unknown',data:[],error:`${requested}: ${error.message}`};throw error;}
   });
 }
-function dellApiLookup(tag) {
-  return dellExclusive(async()=>{
+function warrantyApiLookup(tag) {
+  return warrantyExclusive(async()=>{
     const requested=validateTag(tag);
-    dellResult=await dellClient.lookup(requested);
-    return withFirmwareMatch(dellResult,requested);
+    warrantyResult=await warrantyClient.lookup(requested);
+    return withFirmwareMatch(warrantyResult,requested);
   });
 }
-const isDellURL=url=>{try{const parsed=new URL(url);return parsed.protocol==='https:' && parsed.hostname==='www.dell.com';}catch{return false;}};
-// In-app Dell window: isolated session, no preload, navigation pinned to www.dell.com.
-async function openDellBrowser(tag) {
+const isSupportURL=url=>{try{const parsed=new URL(url);return parsed.protocol==='https:' && parsed.hostname===SUPPORT_HOST;}catch{return false;}};
+// In-app support window: isolated session, no preload, navigation pinned to the support host.
+async function openWarrantyBrowser(tag) {
   const requested=tag?validateTag(tag):null;
-  const url=requested?`https://www.dell.com/support/home/en-vn/product-support/servicetag/${encodeURIComponent(requested)}/overview`:'https://www.dell.com/support/contractservices/en-vn';
-  if(!dellBrowser || dellBrowser.isDestroyed()){
-    dellBrowser=new BrowserWindow({show:false,width:1160,height:850,title:'Dell Support',icon:path.join(__dirname,'logo.png'),autoHideMenuBar:true,webPreferences:{partition:'dell-support-session',nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
-    dellBrowser.once('ready-to-show',()=>dellBrowser?.show());
-    for(const name of ['will-navigate','will-redirect'])dellBrowser.webContents.on(name,(event,target)=>{if(!isDellURL(target))event.preventDefault();});
-    dellBrowser.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-    dellBrowser.on('closed',()=>{dellBrowser=null;});
+  const url=supportPageURL(requested);
+  if(!supportWindow || supportWindow.isDestroyed()){
+    supportWindow=new BrowserWindow({show:false,width:1160,height:850,title:'Trang hỗ trợ bảo hành',icon:path.join(__dirname,'logo.png'),autoHideMenuBar:true,webPreferences:{partition:'warranty-session',nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
+    supportWindow.once('ready-to-show',()=>supportWindow?.show());
+    for(const name of ['will-navigate','will-redirect'])supportWindow.webContents.on(name,(event,target)=>{if(!isSupportURL(target))event.preventDefault();});
+    supportWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+    supportWindow.on('closed',()=>{supportWindow=null;});
   }
-  await dellBrowser.loadURL(url);dellBrowser.show();return true;
+  await supportWindow.loadURL(url);supportWindow.show();return true;
 }
-async function openDellSupport(requestedTag) {
+async function openSupportPage(requestedTag) {
   const tag=requestedTag?validateTag(requestedTag):firmwareTag();
-  const url=/^[A-Z0-9]{5,12}$/.test(tag) ? `https://www.dell.com/support/home/product-support/servicetag/${encodeURIComponent(tag)}/overview` : 'https://www.dell.com/support/home';
+  const url=supportPageURL(/^[A-Z0-9]{5,12}$/.test(tag)?tag:null);
   await shell.openExternal(url);return true;
 }
 
@@ -282,8 +288,8 @@ function manualRows(payload) {
 function exportSections() {
   const exported=scan?structuredClone(scan):{sections:{}};
   const ok=data=>({status:'ok',data,error:null});
-  if(dellResult)Object.assign(exported.sections,{dellAPIAsset:ok([dellResult.asset]),dellAPIWarranty:ok(dellResult.entitlements)});
-  if(dellWebResult)exported.sections.dellWebsite=dellWebResult;
+  if(warrantyResult)Object.assign(exported.sections,{warrantyApiAsset:ok([warrantyResult.asset]),warrantyApiCoverage:ok(warrantyResult.entitlements)});
+  if(warrantyWebResult)exported.sections.warrantyWebsite=warrantyWebResult;
   if(batteryTest)Object.assign(exported.sections,{
     batteryTestSummary:ok([summarizeBattery(batteryTest)]),
     batteryTestSamples:ok(batteryTest.samples.map(({at,percent,ac,charging,batterySaver})=>({at,percent,ac,charging,batterySaver})))
@@ -300,7 +306,7 @@ function fullRunSummary(run) {
 }
 async function exportReport(payload) {
   const manual=manualRows(payload);
-  const picked=await dialog.showSaveDialog(win,{title:'Lưu biên bản kiểm tra',defaultPath:`Dell-Inspect-${new Date().toISOString().slice(0,10)}.html`,filters:[{name:'Báo cáo HTML (mở bằng trình duyệt, in PDF)',extensions:['html']}]});
+  const picked=await dialog.showSaveDialog(win,{title:'Lưu biên bản kiểm tra',defaultPath:`Test-tool-${new Date().toISOString().slice(0,10)}.html`,filters:[{name:'Báo cáo HTML (mở bằng trình duyệt, in PDF)',extensions:['html']}]});
   if(picked.canceled)return {cancelled:true};
   await fs.writeFile(picked.filePath,makeReport(exportSections(),manual,diagnostics,payload.notes,fullRunSummary(payload.fullRun)),'utf8');
   return {path:picked.filePath};
@@ -308,10 +314,10 @@ async function exportReport(payload) {
 
 // ---- App lifecycle ----
 function lockPermissions() {
-  const dellSession=session.fromPartition('dell-support-session');
-  dellSession.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
-  dellSession.setPermissionCheckHandler(()=>false);
-  dellWebClient=new DellWebClient((url,options)=>dellSession.fetch(url,options));
+  const supportSession=session.fromPartition('warranty-session');
+  supportSession.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
+  supportSession.setPermissionCheckHandler(()=>false);
+  warrantyWebClient=new WarrantyWebClient((url,options)=>supportSession.fetch(url,options));
   const allowMedia=(contents,permission)=>contents===win?.webContents && contents.getURL()===pageURL && ['media','fullscreen'].includes(permission);
   session.defaultSession.setPermissionRequestHandler((contents,permission,callback)=>callback(allowMedia(contents,permission)));
   session.defaultSession.setPermissionCheckHandler(allowMedia);
@@ -319,17 +325,20 @@ function lockPermissions() {
 function registerIPC() {
   handle('scan',collect);
   handle('disk-smart-admin',readSmartElevated);
+  // Keyboards connected right now (plugging one in after the scan should not need a full rescan).
+  handle('list-keyboards',()=>runPowerShell(psFile('keyboards.ps1'),{timeoutMs:20000,timeoutMessage:'Đọc danh sách bàn phím quá 20 giây.',failure:'Windows không trả danh sách bàn phím.'})
+    .then(text=>{const list=parseJSON(text || '[]');return Array.isArray(list)?list:[list];}));
   handle('battery-current',async()=>batteryPayload(await sampleBattery()));
   handle('battery-start',startBattery);
   handle('battery-stop',()=>{stopBattery('Người dùng dừng theo dõi. Kết quả chỉ tính phần đã ghi.');return batteryPayload(batteryTest?.samples.at(-1));});
-  handle('dell-config',credentials=>{
-    if(credentials?.clear){dellClient.clear();return {configured:false};}
-    dellClient.configure(credentials?.id,credentials?.secret);return {configured:true};
+  handle('warranty-config',credentials=>{
+    if(credentials?.clear){warrantyClient.clear();return {configured:false};}
+    warrantyClient.configure(credentials?.id,credentials?.secret);return {configured:true};
   });
-  handle('dell-web-lookup',dellWebLookup);
-  handle('dell-web-browser',openDellBrowser);
-  handle('dell-lookup',dellApiLookup);
-  handle('dell-support',openDellSupport);
+  handle('warranty-web-lookup',warrantyWebLookup);
+  handle('warranty-browser',openWarrantyBrowser);
+  handle('warranty-lookup',warrantyApiLookup);
+  handle('warranty-support',openSupportPage);
   handle('export-firmware',exportFirmware);
   handle('diagnostic',runDiagnostic);
   handle('stop-test',async()=>{if(running){running.cancelled=true;await running.worker?.terminate();}return true;});
@@ -357,7 +366,7 @@ function createWindow() {
   win.loadFile(path.join(__dirname,'index.html'));
 }
 app.whenReady().then(()=>{
-  app.setAppUserModelId('local.dellinspect.app');
+  app.setAppUserModelId('local.testtool.app');
   lockPermissions();
   registerIPC();
   createWindow();

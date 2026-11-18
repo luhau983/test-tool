@@ -1,520 +1,507 @@
 ﻿{
-    "schema":  1,
-    "collectedAt":  "2026-11-18T02:21:05.7747702Z",
-    "sections":  {
-                     "system":  {
-                                    "status":  "ok",
-                                    "error":  null,
-                                    "data":  [
-                                                 {
-                                                     "Manufacturer":  "To Be Filled By O.E.M.",
-                                                     "Model":  "B550M Pro SE",
-                                                     "TotalPhysicalMemory":  34279571456,
-                                                     "SystemType":  "x64-based PC"
-                                                 }
-                                             ]
-                                },
-                     "bios":  {
-                                  "status":  "ok",
-                                  "error":  null,
-                                  "data":  [
-                                               {
-                                                   "SerialNumber":  "To Be Filled By O.E.M.",
-                                                   "SMBIOSBIOSVersion":  "P3.40",
-                                                   "ReleaseDate":  "2024-01-18"
-                                               }
-                                           ]
-                              },
-                     "firmwareRaw":  {
-                                         "status":  "ok",
-                                         "error":  null,
-                                         "data":  [
-                                                      {
-                                                          "Provider":  "GetSystemFirmwareTable(RSMB)",
-                                                          "Base64":  "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"
-                                                      }
-                                                  ]
-                                     },
-                     "dellBios":  {
-                                      "status":  "unknown",
-                                      "error":  "EnumerationAttribute: Invalid namespace  | IntegerAttribute: Invalid namespace  | StringAttribute: Invalid namespace ",
-                                      "data":  [
-
-                                               ]
-                                  },
-                     "baseboard":  {
-                                       "status":  "ok",
-                                       "error":  null,
-                                       "data":  [
-                                                    {
-                                                        "Manufacturer":  "ASRock",
-                                                        "Product":  "B550M Pro SE",
-                                                        "Version":  "                      ",
-                                                        "SerialNumber":  "BR80J1012700200"
-                                                    }
-                                                ]
-                                   },
-                     "usb":  {
-                                 "status":  "ok",
-                                 "error":  null,
-                                 "data":  [
-                                              {
-                                                  "Name":  "USB Composite Device",
-                                                  "PNPClass":  "USB",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_046D\u0026PID_C548\\6\u0026165E68A\u00260\u00269"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_1A2C\u0026PID_4184\u0026MI_00\\7\u00261804019A\u00260\u00260000"
-                                              },
-                                              {
-                                                  "Name":  "Intel(R) Wireless Bluetooth(R)",
-                                                  "PNPClass":  "Bluetooth",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_8087\u0026PID_0A2B\\6\u0026165E68A\u00260\u00268"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\u0026MI_01\\7\u002635F2613C\u00260\u00260001"
-                                              },
-                                              {
-                                                  "Name":  "USB Root Hub (USB 3.0)",
-                                                  "PNPClass":  "USB",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\ROOT_HUB30\\5\u0026F964348\u00260\u00260"
-                                              },
-                                              {
-                                                  "Name":  "Logitech USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_046D\u0026PID_C548\u0026MI_00\\7\u002620973131\u00260\u00260000"
-                                              },
-                                              {
-                                                  "Name":  "USB Composite Device",
-                                                  "PNPClass":  "USB",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\\6\u0026165E68A\u00260\u002610"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_1A2C\u0026PID_4184\u0026MI_01\\7\u00261804019A\u00260\u00260001"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\u0026MI_02\\7\u002635F2613C\u00260\u00260002"
-                                              },
-                                              {
-                                                  "Name":  "USB Composite Device",
-                                                  "PNPClass":  "USB",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_1A2C\u0026PID_4184\\6\u0026165E68A\u00260\u002613"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_046D\u0026PID_C548\u0026MI_01\\7\u002620973131\u00260\u00260001"
-                                              },
-                                              {
-                                                  "Name":  "USB Root Hub (USB 3.0)",
-                                                  "PNPClass":  "USB",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\ROOT_HUB30\\5\u002619AA5C54\u00260\u00260"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_046D\u0026PID_C548\u0026MI_02\\7\u002620973131\u00260\u00260002"
-                                              },
-                                              {
-                                                  "Name":  "USB Composite Device",
-                                                  "PNPClass":  "USB",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\\6\u002625A4B41B\u00260\u00263"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\u0026MI_01\\7\u0026CC45A97\u00260\u00260001"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\u0026MI_00\\7\u0026CC45A97\u00260\u00260000"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_046D\u0026PID_C548\u0026MI_03\\7\u002620973131\u00260\u00260003"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_26CE\u0026PID_01A2\\A02019100900"
-                                              },
-                                              {
-                                                  "Name":  "USB Input Device",
-                                                  "PNPClass":  "HIDClass",
-                                                  "Status":  "OK",
-                                                  "ConfigManagerErrorCode":  0,
-                                                  "PNPDeviceID":  "USB\\VID_05AC\u0026PID_024F\u0026MI_00\\7\u002635F2613C\u00260\u00260000"
-                                              }
-                                          ]
-                             },
-                     "security":  {
-                                      "status":  "ok",
-                                      "error":  null,
-                                      "data":  [
-                                                   {
-                                                       "SecureBoot":  "Chưa xác định: Unable to set proper privileges. Access was denied.",
-                                                       "TpmPresent":  null,
-                                                       "TpmReady":  null,
-                                                       "TpmVersion":  null,
-                                                       "TpmError":  null
-                                                   }
-                                               ]
-                                  },
-                     "os":  {
-                                "status":  "ok",
-                                "error":  null,
-                                "data":  [
-                                             {
-                                                 "Caption":  "Microsoft Windows 11 Pro",
-                                                 "Version":  "10.0.26200",
-                                                 "BuildNumber":  "26200",
-                                                 "OSArchitecture":  "64-bit",
-                                                 "LastBootUpTime":  "\/Date(1794965208500)\/",
-                                                 "FreePhysicalMemory":  10770276
-                                             }
-                                         ]
-                            },
-                     "cpu":  {
-                                 "status":  "ok",
-                                 "error":  null,
-                                 "data":  [
-                                              {
-                                                  "Name":  "AMD Ryzen 5 5600X 6-Core Processor             ",
-                                                  "NumberOfCores":  6,
-                                                  "NumberOfLogicalProcessors":  12,
-                                                  "MaxClockSpeed":  3701,
-                                                  "CurrentClockSpeed":  3701,
-                                                  "LoadPercentage":  87
-                                              }
-                                          ]
-                             },
-                     "memory":  {
-                                    "status":  "ok",
-                                    "error":  null,
-                                    "data":  [
-                                                 {
-                                                     "DeviceLocator":  "DIMM 1",
-                                                     "Manufacturer":  "Unknown",
-                                                     "PartNumber":  "TEAMGROUP-UD4-3200  ",
-                                                     "Capacity":  17179869184,
-                                                     "Speed":  3600,
-                                                     "ConfiguredClockSpeed":  3600
-                                                 },
-                                                 {
-                                                     "DeviceLocator":  "DIMM 1",
-                                                     "Manufacturer":  "Unknown",
-                                                     "PartNumber":  "TEAMGROUP-UD4-3200  ",
-                                                     "Capacity":  17179869184,
-                                                     "Speed":  3600,
-                                                     "ConfiguredClockSpeed":  3600
-                                                 }
-                                             ]
-                                },
-                     "gpu":  {
-                                 "status":  "ok",
-                                 "error":  null,
-                                 "data":  [
-                                              {
-                                                  "Name":  "NVIDIA GeForce GTX 1050 Ti",
-                                                  "DriverVersion":  "32.0.15.8157",
-                                                  "CurrentHorizontalResolution":  1920,
-                                                  "CurrentVerticalResolution":  1080,
-                                                  "CurrentRefreshRate":  60,
-                                                  "VideoModeDescription":  "1920 x 1080 x 4294967296 colors"
-                                              }
-                                          ]
-                             },
-                     "battery":  {
-                                     "status":  "ok",
-                                     "error":  null,
-                                     "data":  [
-
-                                              ]
-                                 },
-                     "batteryNow":  {
-                                        "status":  "ok",
-                                        "error":  null,
-                                        "data":  [
-
-                                                 ]
-                                    },
-                     "disks":  {
-                                   "status":  "ok",
-                                   "error":  null,
-                                   "data":  [
-                                                {
-                                                    "Index":  0,
-                                                    "Model":  "KIOXIA-EXCERIA SATA SSD",
-                                                    "Size":  480101368320,
-                                                    "InterfaceType":  "IDE",
-                                                    "Status":  "OK",
-                                                    "MediaType":  "Fixed hard disk media",
-                                                    "SerialNumber":  "44GB71JWK0W5"
-                                                },
-                                                {
-                                                    "Index":  1,
-                                                    "Model":  "Lexar SSD NQ780 512GB",
-                                                    "Size":  512105932800,
-                                                    "InterfaceType":  "SCSI",
-                                                    "Status":  "OK",
-                                                    "MediaType":  "Fixed hard disk media",
-                                                    "SerialNumber":  "0000_0006_2506_1920_CAF2_5B03_8A00_001E."
-                                                }
-                                            ]
-                               },
-                     "volumes":  {
-                                     "status":  "ok",
-                                     "error":  null,
-                                     "data":  [
-                                                  {
-                                                      "DeviceID":  "C:",
-                                                      "VolumeName":  "",
-                                                      "Size":  510942769152,
-                                                      "FreeSpace":  256492445696,
-                                                      "FileSystem":  "NTFS"
-                                                  },
-                                                  {
-                                                      "DeviceID":  "E:",
-                                                      "VolumeName":  "DATA2",
-                                                      "Size":  480102051840,
-                                                      "FreeSpace":  186049486848,
-                                                      "FileSystem":  "NTFS"
-                                                  }
-                                              ]
-                                 },
-                     "storage":  {
-                                     "status":  "ok",
-                                     "error":  null,
-                                     "data":  [
-                                                  {
-                                                      "DeviceId":  "0",
-                                                      "FriendlyName":  "KIOXIA-EXCERIA SATA SSD",
-                                                      "SerialNumber":  "44GB71JWK0W5",
-                                                      "MediaType":  "SSD",
-                                                      "BusType":  "SATA",
-                                                      "HealthStatus":  "Healthy",
-                                                      "OperationalStatus":  "OK",
-                                                      "Temperature":  null,
-                                                      "Wear":  null,
-                                                      "PowerOnHours":  null,
-                                                      "ReadErrorsUncorrected":  null,
-                                                      "WriteErrorsUncorrected":  null,
-                                                      "CounterError":  "Access to a CIM resource was not available to the client."
-                                                  },
-                                                  {
-                                                      "DeviceId":  "1",
-                                                      "FriendlyName":  "Lexar SSD NQ780 512GB",
-                                                      "SerialNumber":  "0000_0006_2506_1920_CAF2_5B03_8A00_001E.",
-                                                      "MediaType":  "SSD",
-                                                      "BusType":  "NVMe",
-                                                      "HealthStatus":  "Healthy",
-                                                      "OperationalStatus":  "OK",
-                                                      "Temperature":  null,
-                                                      "Wear":  null,
-                                                      "PowerOnHours":  null,
-                                                      "ReadErrorsUncorrected":  null,
-                                                      "WriteErrorsUncorrected":  null,
-                                                      "CounterError":  "Access to a CIM resource was not available to the client."
-                                                  }
-                                              ]
-                                 },
-                     "network":  {
-                                     "status":  "ok",
-                                     "error":  null,
-                                     "data":  [
-                                                  {
-                                                      "Name":  "Realtek Gaming 2.5GbE Family Controller",
-                                                      "NetConnectionID":  "Ethernet",
-                                                      "NetConnectionStatus":  7,
-                                                      "Speed":  9223372036854775807,
-                                                      "MACAddress":  "9C:6B:00:7F:0F:F9"
-                                                  },
-                                                  {
-                                                      "Name":  "Tailscale Tunnel",
-                                                      "NetConnectionID":  "Tailscale",
-                                                      "NetConnectionStatus":  2,
-                                                      "Speed":  100000000000,
-                                                      "MACAddress":  null
-                                                  },
-                                                  {
-                                                      "Name":  "Intel(R) Dual Band Wireless-AC 8265",
-                                                      "NetConnectionID":  "WiFi",
-                                                      "NetConnectionStatus":  2,
-                                                      "Speed":  585000000,
-                                                      "MACAddress":  "A0:A4:C5:80:24:3D"
-                                                  },
-                                                  {
-                                                      "Name":  "Bluetooth Device (Personal Area Network)",
-                                                      "NetConnectionID":  "Bluetooth Network Connection",
-                                                      "NetConnectionStatus":  7,
-                                                      "Speed":  3000000,
-                                                      "MACAddress":  "A0:A4:C5:80:24:41"
-                                                  }
-                                              ]
-                                 },
-                     "audio":  {
-                                   "status":  "ok",
-                                   "error":  null,
-                                   "data":  [
-                                                {
-                                                    "Name":  "NVIDIA High Definition Audio",
-                                                    "Status":  "OK",
-                                                    "ConfigManagerErrorCode":  0
-                                                },
-                                                {
-                                                    "Name":  "Realtek High Definition Audio",
-                                                    "Status":  "OK",
-                                                    "ConfigManagerErrorCode":  0
-                                                },
-                                                {
-                                                    "Name":  "NVIDIA Virtual Audio Device (Wave Extensible) (WDM)",
-                                                    "Status":  "OK",
-                                                    "ConfigManagerErrorCode":  0
-                                                }
-                                            ]
-                               },
-                     "devices":  {
-                                     "status":  "ok",
-                                     "error":  null,
-                                     "data":  [
-                                                  {
-                                                      "Name":  "Microsoft Bluetooth LE Enumerator",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Bluetooth LE Generic Attribute Service",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Intel(R) Wireless Bluetooth(R)",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Generic Monitor (Mi Monitor)",
-                                                      "PNPClass":  "Monitor",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Galaxy Buds Pro (FB21) Avrcp Transport",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Galaxy Buds Pro (FB21)",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Device Information Service",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Microsoft Bluetooth Enumerator",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Bluetooth LE Generic Attribute Service",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Bluetooth Device (RFCOMM Protocol TDI)",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Generic Access Profile",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Generic Attribute Profile",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "Galaxy Buds Pro (FB21) Avrcp Transport",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  },
-                                                  {
-                                                      "Name":  "BT Keyboard",
-                                                      "PNPClass":  "Bluetooth",
-                                                      "Status":  "OK",
-                                                      "ConfigManagerErrorCode":  0
-                                                  }
-                                              ]
-                                 },
-                     "events":  {
-                                    "status":  "ok",
-                                    "error":  null,
-                                    "data":  [
-
-                                             ]
-                                }
-                 }
+  "schema": 1,
+  "collectedAt": "2026-11-18T02:21:05.7747702Z",
+  "sections": {
+    "system": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Manufacturer": "To Be Filled By O.E.M.",
+          "Model": "B550M Pro SE",
+          "TotalPhysicalMemory": 34279571456,
+          "SystemType": "x64-based PC"
+        }
+      ]
+    },
+    "bios": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "SerialNumber": "To Be Filled By O.E.M.",
+          "SMBIOSBIOSVersion": "P3.40",
+          "ReleaseDate": "2024-01-18"
+        }
+      ]
+    },
+    "firmwareRaw": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Provider": "GetSystemFirmwareTable(RSMB)",
+          "Base64": "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"
+        }
+      ]
+    },
+    "baseboard": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Manufacturer": "ASRock",
+          "Product": "B550M Pro SE",
+          "Version": "                      ",
+          "SerialNumber": "BR80J1012700200"
+        }
+      ]
+    },
+    "usb": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Name": "USB Composite Device",
+          "PNPClass": "USB",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_046D&PID_C548\\6&165E68A&0&9"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_1A2C&PID_4184&MI_00\\7&1804019A&0&0000"
+        },
+        {
+          "Name": "Intel(R) Wireless Bluetooth(R)",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_8087&PID_0A2B\\6&165E68A&0&8"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F&MI_01\\7&35F2613C&0&0001"
+        },
+        {
+          "Name": "USB Root Hub (USB 3.0)",
+          "PNPClass": "USB",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\ROOT_HUB30\\5&F964348&0&0"
+        },
+        {
+          "Name": "Logitech USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_046D&PID_C548&MI_00\\7&20973131&0&0000"
+        },
+        {
+          "Name": "USB Composite Device",
+          "PNPClass": "USB",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F\\6&165E68A&0&10"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_1A2C&PID_4184&MI_01\\7&1804019A&0&0001"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F&MI_02\\7&35F2613C&0&0002"
+        },
+        {
+          "Name": "USB Composite Device",
+          "PNPClass": "USB",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_1A2C&PID_4184\\6&165E68A&0&13"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_046D&PID_C548&MI_01\\7&20973131&0&0001"
+        },
+        {
+          "Name": "USB Root Hub (USB 3.0)",
+          "PNPClass": "USB",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\ROOT_HUB30\\5&19AA5C54&0&0"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_046D&PID_C548&MI_02\\7&20973131&0&0002"
+        },
+        {
+          "Name": "USB Composite Device",
+          "PNPClass": "USB",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F\\6&25A4B41B&0&3"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F&MI_01\\7&CC45A97&0&0001"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F&MI_00\\7&CC45A97&0&0000"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_046D&PID_C548&MI_03\\7&20973131&0&0003"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_26CE&PID_01A2\\A02019100900"
+        },
+        {
+          "Name": "USB Input Device",
+          "PNPClass": "HIDClass",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0,
+          "PNPDeviceID": "USB\\VID_05AC&PID_024F&MI_00\\7&35F2613C&0&0000"
+        }
+      ]
+    },
+    "security": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "SecureBoot": "Chưa xác định: Unable to set proper privileges. Access was denied.",
+          "TpmPresent": null,
+          "TpmReady": null,
+          "TpmVersion": null,
+          "TpmError": null
+        }
+      ]
+    },
+    "os": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Caption": "Microsoft Windows 11 Pro",
+          "Version": "10.0.26200",
+          "BuildNumber": "26200",
+          "OSArchitecture": "64-bit",
+          "LastBootUpTime": "/Date(1794965208500)/",
+          "FreePhysicalMemory": 10770276
+        }
+      ]
+    },
+    "cpu": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Name": "AMD Ryzen 5 5600X 6-Core Processor             ",
+          "NumberOfCores": 6,
+          "NumberOfLogicalProcessors": 12,
+          "MaxClockSpeed": 3701,
+          "CurrentClockSpeed": 3701,
+          "LoadPercentage": 87
+        }
+      ]
+    },
+    "memory": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "DeviceLocator": "DIMM 1",
+          "Manufacturer": "Unknown",
+          "PartNumber": "TEAMGROUP-UD4-3200  ",
+          "Capacity": 17179869184,
+          "Speed": 3600,
+          "ConfiguredClockSpeed": 3600
+        },
+        {
+          "DeviceLocator": "DIMM 1",
+          "Manufacturer": "Unknown",
+          "PartNumber": "TEAMGROUP-UD4-3200  ",
+          "Capacity": 17179869184,
+          "Speed": 3600,
+          "ConfiguredClockSpeed": 3600
+        }
+      ]
+    },
+    "gpu": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Name": "NVIDIA GeForce GTX 1050 Ti",
+          "DriverVersion": "32.0.15.8157",
+          "CurrentHorizontalResolution": 1920,
+          "CurrentVerticalResolution": 1080,
+          "CurrentRefreshRate": 60,
+          "VideoModeDescription": "1920 x 1080 x 4294967296 colors"
+        }
+      ]
+    },
+    "battery": {
+      "status": "ok",
+      "error": null,
+      "data": []
+    },
+    "batteryNow": {
+      "status": "ok",
+      "error": null,
+      "data": []
+    },
+    "disks": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Index": 0,
+          "Model": "KIOXIA-EXCERIA SATA SSD",
+          "Size": 480101368320,
+          "InterfaceType": "IDE",
+          "Status": "OK",
+          "MediaType": "Fixed hard disk media",
+          "SerialNumber": "44GB71JWK0W5"
+        },
+        {
+          "Index": 1,
+          "Model": "Lexar SSD NQ780 512GB",
+          "Size": 512105932800,
+          "InterfaceType": "SCSI",
+          "Status": "OK",
+          "MediaType": "Fixed hard disk media",
+          "SerialNumber": "0000_0006_2506_1920_CAF2_5B03_8A00_001E."
+        }
+      ]
+    },
+    "volumes": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "DeviceID": "C:",
+          "VolumeName": "",
+          "Size": 510942769152,
+          "FreeSpace": 256492445696,
+          "FileSystem": "NTFS"
+        },
+        {
+          "DeviceID": "E:",
+          "VolumeName": "DATA2",
+          "Size": 480102051840,
+          "FreeSpace": 186049486848,
+          "FileSystem": "NTFS"
+        }
+      ]
+    },
+    "storage": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "DeviceId": "0",
+          "FriendlyName": "KIOXIA-EXCERIA SATA SSD",
+          "SerialNumber": "44GB71JWK0W5",
+          "MediaType": "SSD",
+          "BusType": "SATA",
+          "HealthStatus": "Healthy",
+          "OperationalStatus": "OK",
+          "Temperature": null,
+          "Wear": null,
+          "PowerOnHours": null,
+          "ReadErrorsUncorrected": null,
+          "WriteErrorsUncorrected": null,
+          "CounterError": "Access to a CIM resource was not available to the client."
+        },
+        {
+          "DeviceId": "1",
+          "FriendlyName": "Lexar SSD NQ780 512GB",
+          "SerialNumber": "0000_0006_2506_1920_CAF2_5B03_8A00_001E.",
+          "MediaType": "SSD",
+          "BusType": "NVMe",
+          "HealthStatus": "Healthy",
+          "OperationalStatus": "OK",
+          "Temperature": null,
+          "Wear": null,
+          "PowerOnHours": null,
+          "ReadErrorsUncorrected": null,
+          "WriteErrorsUncorrected": null,
+          "CounterError": "Access to a CIM resource was not available to the client."
+        }
+      ]
+    },
+    "network": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Name": "Realtek Gaming 2.5GbE Family Controller",
+          "NetConnectionID": "Ethernet",
+          "NetConnectionStatus": 7,
+          "Speed": 9223372036854775807,
+          "MACAddress": "9C:6B:00:7F:0F:F9"
+        },
+        {
+          "Name": "Tailscale Tunnel",
+          "NetConnectionID": "Tailscale",
+          "NetConnectionStatus": 2,
+          "Speed": 100000000000,
+          "MACAddress": null
+        },
+        {
+          "Name": "Intel(R) Dual Band Wireless-AC 8265",
+          "NetConnectionID": "WiFi",
+          "NetConnectionStatus": 2,
+          "Speed": 585000000,
+          "MACAddress": "A0:A4:C5:80:24:3D"
+        },
+        {
+          "Name": "Bluetooth Device (Personal Area Network)",
+          "NetConnectionID": "Bluetooth Network Connection",
+          "NetConnectionStatus": 7,
+          "Speed": 3000000,
+          "MACAddress": "A0:A4:C5:80:24:41"
+        }
+      ]
+    },
+    "audio": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Name": "NVIDIA High Definition Audio",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Realtek High Definition Audio",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "NVIDIA Virtual Audio Device (Wave Extensible) (WDM)",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        }
+      ]
+    },
+    "devices": {
+      "status": "ok",
+      "error": null,
+      "data": [
+        {
+          "Name": "Microsoft Bluetooth LE Enumerator",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Bluetooth LE Generic Attribute Service",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Intel(R) Wireless Bluetooth(R)",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Generic Monitor (Mi Monitor)",
+          "PNPClass": "Monitor",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Galaxy Buds Pro (FB21) Avrcp Transport",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Galaxy Buds Pro (FB21)",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Device Information Service",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Microsoft Bluetooth Enumerator",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Bluetooth LE Generic Attribute Service",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Bluetooth Device (RFCOMM Protocol TDI)",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Generic Access Profile",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Generic Attribute Profile",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "Galaxy Buds Pro (FB21) Avrcp Transport",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        },
+        {
+          "Name": "BT Keyboard",
+          "PNPClass": "Bluetooth",
+          "Status": "OK",
+          "ConfigManagerErrorCode": 0
+        }
+      ]
+    },
+    "events": {
+      "status": "ok",
+      "error": null,
+      "data": []
+    }
+  }
 }
