@@ -1,0 +1,22 @@
+const {contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('inspect',{
+  scan:()=>ipcRenderer.invoke('scan'),
+  diskSmartAdmin:()=>ipcRenderer.invoke('disk-smart-admin'),
+  exportFirmware:()=>ipcRenderer.invoke('export-firmware'),
+  dellConfigure:credentials=>ipcRenderer.invoke('dell-config',credentials),
+  dellLookup:tag=>ipcRenderer.invoke('dell-lookup',tag),
+  dellWebLookup:tag=>ipcRenderer.invoke('dell-web-lookup',tag),
+  dellWebBrowser:tag=>ipcRenderer.invoke('dell-web-browser',tag),
+  batteryCurrent:()=>ipcRenderer.invoke('battery-current'),
+  batteryStart:minutes=>ipcRenderer.invoke('battery-start',minutes),
+  batteryStop:()=>ipcRenderer.invoke('battery-stop'),
+  onBatteryUpdate:callback=>{ipcRenderer.on('battery-update',(_,value)=>callback(value));},
+  diagnostic:(kind,drive,sizeMiB)=>ipcRenderer.invoke('diagnostic',kind,drive,sizeMiB),
+  stop:()=>ipcRenderer.invoke('stop-test'),
+  openTool:tool=>ipcRenderer.invoke('open-tool',tool),
+  support:tag=>ipcRenderer.invoke('dell-support',tag),
+  export:payload=>ipcRenderer.invoke('export',payload),
+  onScanProgress:callback=>{ipcRenderer.on('scan-progress',(_,value)=>callback(value));},
+  onTestProgress:callback=>{ipcRenderer.on('test-progress',(_,value)=>callback(value));},
+  onCleanupWarning:callback=>{ipcRenderer.on('cleanup-warning',(_,value)=>callback(value));}
+});

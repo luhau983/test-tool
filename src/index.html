@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="vi" data-theme="inspect">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src 'self' blob:; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Test tool</title><link rel="stylesheet" href="app.css"></head>
+<body class="bg-base-200 text-base-content">
+<!-- Icon sprite (paths adapted from Lucide, ISC license). Use: <svg class="icon"><use href="#i-name"/></svg> -->
+<svg width="0" height="0" class="absolute" aria-hidden="true">
+  <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></symbol>
+  <symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M11 9h4a2 2 0 0 0 2-2V3"/><circle cx="9" cy="9" r="2"/><path d="M7 21v-4a2 2 0 0 1 2-2h4"/><circle cx="15" cy="15" r="2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2M6 11v2M10 11v2"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><path d="m16 13 5.22 3.48a.5.5 0 0 0 .78-.42V7.87a.5.5 0 0 0-.75-.43L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9V3z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
+  <symbol id="i-memory" viewBox="0 0 24 24"><path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M8 11V9M16 11V9M12 11V9M2 15h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.1a2 2 0 0 0 0 3.84V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.06a2 2 0 0 0 0-3.84Z"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-cycle" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></symbol>
+  <symbol id="i-windows" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></symbol>
+</svg>
+
+<div class="flex min-h-screen">
+<aside class="sidebar shrink-0 bg-base-100 border-r border-base-300 flex flex-col fixed inset-y-0 left-0 overflow-y-auto">
+  <nav class="px-3 pt-4 pb-2 space-y-0.5">
+    <button class="nav menu-active" data-page="overview" title="Tổng quan"><svg class="icon"><use href="#i-dashboard"/></svg><span class="nav-label">Tổng quan</span></button>
+    <button class="nav" data-page="hardware" title="Phần cứng"><svg class="icon"><use href="#i-cpu"/></svg><span class="nav-label">Phần cứng</span></button>
+    <button class="nav" data-page="disks" title="Ổ cứng"><svg class="icon"><use href="#i-drive"/></svg><span class="nav-label">Ổ cứng</span></button>
+    <button class="nav" data-page="memory" title="RAM"><svg class="icon"><use href="#i-memory"/></svg><span class="nav-label">RAM</span></button>
+    <button class="nav" data-page="windows" title="Windows"><svg class="icon"><use href="#i-windows"/></svg><span class="nav-label">Windows</span></button>
+    <button class="nav" data-page="usage" title="Sử dụng"><svg class="icon"><use href="#i-clock"/></svg><span class="nav-label">Sử dụng</span></button>
+    <button class="nav" data-page="firmware" title="BIOS / SMBIOS"><svg class="icon"><use href="#i-chip"/></svg><span class="nav-label">BIOS / SMBIOS</span></button>
+    <button class="nav" data-page="dell" title="Tra Dell"><svg class="icon"><use href="#i-globe"/></svg><span class="nav-label">Tra Dell</span></button>
+    <p class="nav-section px-2.5 pt-5 pb-1 text-[11px] font-medium muted">THỬ TRỰC TIẾP</p>
+    <button class="nav" data-page="battery" title="Pin &amp; sạc"><svg class="icon"><use href="#i-battery"/></svg><span class="nav-label">Pin &amp; sạc</span></button>
+    <button class="nav" data-page="screen" title="Màn hình"><svg class="icon"><use href="#i-monitor"/></svg><span class="nav-label">Màn hình</span></button>
+    <button class="nav" data-page="input" title="Bàn phím &amp; chuột"><svg class="icon"><use href="#i-keyboard"/></svg><span class="nav-label">Bàn phím &amp; chuột</span></button>
+    <button class="nav" data-page="media" title="Âm thanh &amp; camera"><svg class="icon"><use href="#i-video"/></svg><span class="nav-label">Âm thanh &amp; camera</span></button>
+    <button class="nav" data-page="diagnostics" title="Bài thử nhanh"><svg class="icon"><use href="#i-zap"/></svg><span class="nav-label">Bài thử nhanh</span></button>
+    <p class="nav-section px-2.5 pt-5 pb-1 text-[11px] font-medium muted">KẾT QUẢ</p>
+    <button class="nav" data-page="summary" title="Kết quả lượt test"><svg class="icon"><use href="#i-chart"/></svg><span class="nav-label">Kết quả lượt test</span></button>
+    <button class="nav" data-page="checklist" title="Biên bản"><svg class="icon"><use href="#i-clipboard"/></svg><span class="nav-label">Biên bản</span></button>
+  </nav>
+  <div class="sidebar-foot mt-auto py-4 text-xs muted flex items-center gap-2" title="Offline · v1.2.0"><span class="status status-success"></span><span class="nav-label">Offline · v1.2.0</span></div>
+</aside>
+
+<main class="main-area flex-1 min-w-0">
+<header class="sticky top-0 z-30 h-16 px-8 flex items-center gap-3 bg-base-100/85 backdrop-blur border-b border-base-300">
+  <button class="btn btn-sm btn-ghost btn-square -ml-2" id="toggleSidebar" aria-label="Thu gọn hoặc mở thanh bên" title="Thu gọn / mở thanh bên (Ctrl+B)"><svg class="icon"><use href="#i-sidebar"/></svg></button>
+  <div class="flex-1 min-w-0"><h1 id="pageTitle" class="text-base font-semibold leading-tight">Tổng quan</h1><p id="pageSubtitle" class="text-xs muted truncate">Tóm tắt cấu hình và các điểm cần kiểm tra thêm.</p></div>
+  <span id="scanStamp" class="text-xs muted tabular">Chưa quét</span>
+  <button class="btn btn-sm btn-ghost btn-square" id="toggleTheme" aria-label="Chuyển giao diện sáng / tối" title="Giao diện sáng / tối"><svg class="icon"><use href="#i-moon"/></svg></button>
+  <button class="btn btn-sm btn-quiet" id="export"><svg class="icon"><use href="#i-download"/></svg>Báo cáo</button>
+  <button class="btn btn-sm btn-quiet" id="scan"><svg class="icon"><use href="#i-refresh"/></svg>Quét lại</button>
+  <button class="btn btn-sm btn-primary" id="testAll"><svg class="icon"><use href="#i-play"/></svg>Test toàn bộ</button>
+  <!-- Busy state: progress bar along the header's bottom edge plus a small status pill; never shifts the header. -->
+  <div id="busy" class="hidden absolute inset-x-0 top-full pointer-events-none" role="status" aria-live="polite"><progress id="busyBar" class="progress progress-primary busy-bar" max="100"></progress><div class="flex justify-center"><span class="busy-pill"><span class="loading loading-spinner loading-xs text-primary"></span><span id="busyText">Đang đọc phần cứng…</span><span id="busyPercent" class="tabular muted"></span></span></div></div>
+</header>
+
+<div class="px-8 py-6 max-w-6xl">
+<div id="fullGuide" role="status" class="panel sticky top-20 z-20 mb-6 shadow-sm flex items-center gap-5 hidden"><div class="flex-1 min-w-0"><p id="fullTitle" class="text-sm font-semibold">Test toàn bộ</p><p id="fullDetail" class="text-xs muted mt-0.5 mb-2"></p><progress id="fullProgress" class="progress h-1 w-full" max="9" value="0"></progress></div><div class="flex gap-2 shrink-0"><button class="btn btn-sm btn-success hidden" id="fullPass"><svg class="icon"><use href="#i-check"/></svg>Đạt</button><button class="btn btn-sm btn-error hidden" id="fullFail"><svg class="icon"><use href="#i-warn"/></svg>Có lỗi</button><button class="btn btn-sm btn-quiet hidden" id="fullNext">Bỏ qua</button><button class="btn btn-sm btn-ghost" id="fullStop">Dừng</button></div></div>
+
+<section id="overview" class="page active space-y-6">
+  <div class="panel flex items-center gap-5 bg-linear-to-br from-blue-50 via-base-100 to-base-100">
+    <span class="icon-tile size-14 rounded-xl bg-primary text-primary-content shadow-sm"><svg class="icon size-7"><use href="#i-laptop"/></svg></span>
+    <div class="min-w-0 flex-1"><p class="text-xs muted">Máy đang kiểm tra</p><h2 id="machineName" class="text-2xl font-semibold tracking-tight">Đang đọc cấu hình…</h2><div id="machineDetail" class="flex flex-wrap gap-1.5 mt-2"></div></div>
+    <button class="btn btn-sm btn-quiet shrink-0 self-start" id="support">Tra trên Dell<svg class="icon"><use href="#i-external"/></svg></button>
+  </div>
+  <div id="metrics" class="grid grid-cols-4 gap-3"></div>
+  <div id="usageMetrics" class="grid grid-cols-3 gap-3"></div>
+  <div class="grid grid-cols-[1.4fr_1fr] gap-4">
+    <article class="panel"><div class="flex justify-between items-center mb-3"><h3 class="panel-title">Điểm cần chú ý</h3><span id="findingCount" class="text-xs muted"></span></div><div id="findings"><p class="text-sm muted py-6 text-center">Chưa có dữ liệu.</p></div></article>
+    <article class="panel"><h3 class="panel-title mb-3">Quy trình gợi ý</h3>
+      <ol class="space-y-3 text-sm">
+        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">1</span><span>Đối chiếu model, CPU, RAM, ổ và Service Tag với tin rao</span></li>
+        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">2</span><span>Thử màn hình, phím, loa, camera, cổng và pin</span></li>
+        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">3</span><span>Chạy Dell F12 Diagnostics, xem F2 BIOS</span></li>
+        <li class="flex gap-3"><span class="badge badge-sm bg-primary/10 text-primary border-0 tabular">4</span><span>Ghi kết quả và xuất biên bản</span></li>
+      </ol>
+      <button class="btn btn-sm btn-quiet btn-block mt-5" data-goto="checklist">Mở biên bản<svg class="icon"><use href="#i-arrow"/></svg></button></article>
+  </div>
+  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Không phần mềm nào xác nhận toàn bộ máy tốt. Dữ liệu thiếu được ghi là “chưa xác định”.</p>
+</section>
+
+<section id="hardware" class="page space-y-4"><div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="hardware"></div><div id="hardwareSections" class="space-y-4"><p class="text-sm muted">Chưa có dữ liệu.</p></div><p class="note mt-4"><svg class="icon"><use href="#i-info"/></svg>“Healthy” của Windows không xác nhận ổ tốt toàn bộ. Model, CPU, RAM xem ở tab BIOS / SMBIOS.</p></section>
+
+<section id="windows" class="page space-y-4">
+  <div id="windowsView"><p class="text-sm muted">Chưa có dữ liệu.</p></div>
+  <article class="panel"><h3 class="panel-title mb-3">Mở nhanh cài đặt Windows</h3><div class="flex flex-wrap gap-2">
+    <button class="btn btn-sm btn-quiet" data-tool="activation"><svg class="icon"><use href="#i-shield"/></svg>Kích hoạt</button>
+    <button class="btn btn-sm btn-quiet" data-tool="windowsupdate"><svg class="icon"><use href="#i-refresh"/></svg>Windows Update</button>
+    <button class="btn btn-sm btn-quiet" data-tool="accounts"><svg class="icon"><use href="#i-windows"/></svg>Tài khoản trên máy</button>
+    <button class="btn btn-sm btn-quiet" data-tool="workplace"><svg class="icon"><use href="#i-windows"/></svg>Cơ quan / trường học</button>
+    <button class="btn btn-sm btn-quiet" data-tool="defender"><svg class="icon"><use href="#i-shield"/></svg>Windows Security</button>
+    <button class="btn btn-sm btn-quiet" data-tool="recovery"><svg class="icon"><use href="#i-cycle"/></svg>Đặt lại máy (Reset)</button>
+    <button class="btn btn-sm btn-quiet" data-tool="about"><svg class="icon"><use href="#i-info"/></svg>Thông tin máy</button>
+  </div><p class="note mt-3"><svg class="icon"><use href="#i-info"/></svg>Chỉ mở trang Cài đặt của Windows; ứng dụng không tự thay đổi gì.</p></article>
+</section>
+
+<section id="memory" class="page"><div id="memoryView"><p class="text-sm muted">Chưa có dữ liệu.</p></div></section>
+<section id="usage" class="page"><div id="usageView"><p class="text-sm muted">Chưa có dữ liệu.</p></div></section>
+
+<section id="disks" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="disks"></div>
+  <div id="diskTabs" class="flex flex-wrap gap-2"></div>
+  <div id="diskView"><p class="text-sm muted">Chưa có dữ liệu.</p></div>
+</section>
+
+<section id="firmware" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="firmware"></div>
+  <div class="flex items-center justify-between gap-4"><p class="note"><svg class="icon"><use href="#i-info"/></svg>Bảng firmware công bố cho hệ điều hành, không phải toàn bộ chip BIOS. Thiết lập Dell đọc qua WMI nếu model hỗ trợ; ứng dụng chỉ đọc.</p><button class="btn btn-sm btn-quiet shrink-0" id="exportFirmware"><svg class="icon"><use href="#i-download"/></svg>Lưu SMBIOS .bin</button></div>
+  <div id="firmwareSections" class="space-y-4"><p class="text-sm muted">Chưa có dữ liệu.</p></div>
+</section>
+
+<section id="dell" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="dell"></div>
+  <div class="grid grid-cols-2 gap-4" id="dellColumns">
+    <article class="panel space-y-4">
+      <div class="flex items-center justify-between"><h3 class="panel-title">Service Tag</h3><select id="dellMethod" class="select select-sm w-56"><option value="web">Dell web · không cần khóa</option><option value="techdirect">TechDirect API</option></select></div>
+      <input class="input w-full tag-input" id="dellTag" maxlength="12" autocomplete="off" placeholder="ABC1234" aria-label="Service Tag">
+      <div class="flex items-center justify-between gap-3"><p id="dellIdentity" class="text-xs muted">Đang tự đọc Service Tag từ BIOS…</p><button class="btn btn-xs btn-ghost" id="useCurrentTag" disabled>Dùng Tag máy này</button></div>
+      <button class="btn btn-primary btn-block" id="dellLookup">Tra cứu</button>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-sm" id="dellInFull">Tra trong lượt Test toàn bộ</label>
+      <div class="flex gap-2"><button class="btn btn-sm btn-quiet" id="openDellBrowser">Mở trang Dell trong app</button><button class="btn btn-sm btn-ghost" id="supportFallback">Trình duyệt ngoài<svg class="icon"><use href="#i-external"/></svg></button></div>
+      <p class="note"><svg class="icon"><use href="#i-info"/></svg>Chỉ Service Tag được gửi tới Dell qua HTTPS. HTTP 403 nghĩa là bị chặn, không phải mã sai.</p>
+    </article>
+    <article class="panel space-y-4">
+      <h3 class="panel-title">TechDirect API</h3>
+      <p class="text-xs muted">Cần Client ID / Secret được Dell duyệt cho Warranty API. Khóa chỉ giữ trong RAM của phiên này.</p>
+      <fieldset class="fieldset p-0"><label class="fieldset-label" for="dellClientId">Client ID</label><input class="input w-full" id="dellClientId" type="password" autocomplete="off" maxlength="1024"><label class="fieldset-label mt-2" for="dellSecret">Client Secret</label><input class="input w-full" id="dellSecret" type="password" autocomplete="off" maxlength="4096"></fieldset>
+      <div class="flex gap-2"><button class="btn btn-sm btn-primary" id="dellConnect">Dùng khóa</button><button class="btn btn-sm btn-quiet" id="dellClear">Xóa khóa</button><button class="btn btn-sm btn-ghost ml-auto" data-tool="techdirect">Đăng ký<svg class="icon"><use href="#i-external"/></svg></button></div>
+      <p id="dellAuthStatus" class="text-xs muted">Chưa cấu hình</p>
+    </article>
+  </div>
+  <div id="dellResults" class="space-y-4"></div>
+</section>
+
+<section id="battery" class="page space-y-4">
+  <div id="batteryMetrics" class="grid grid-cols-4 gap-3"></div>
+  <div id="batterySpecs"></div>
+  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Trạng thái hiện tại</h3><button class="btn btn-sm btn-quiet" id="refreshBattery"><svg class="icon"><use href="#i-refresh"/></svg>Đọc lại</button></div><p id="batteryLive" role="status" class="text-sm">Chưa đọc trạng thái.</p><div id="batteryLiveDetails"></div></article>
+  <article class="panel space-y-4"><div><h3 class="panel-title">Theo dõi mức tụt pin</h3><p class="text-xs muted mt-1">Sạc trên 10%, rút sạc rồi bắt đầu. Tự dừng khi cắm sạc, gián đoạn hoặc pin ≤5%.</p></div>
+    <div class="flex flex-wrap items-center gap-2"><select id="batteryDuration" class="select select-sm w-44"><option value="2">2 phút</option><option value="10" selected>10 phút</option><option value="30">30 phút</option></select><button class="btn btn-sm btn-primary" id="startBattery"><svg class="icon"><use href="#i-play"/></svg>Bắt đầu</button><button class="btn btn-sm btn-quiet" id="stopBattery" disabled><svg class="icon"><use href="#i-stop"/></svg>Dừng</button><input id="batteryConditions" class="input input-sm flex-1 min-w-60" maxlength="1000" placeholder="Điều kiện thử, VD: sáng 50%, Wi-Fi bật" aria-label="Điều kiện thử pin"></div>
+    <progress id="batteryProgress" class="progress h-1 w-full" max="100" value="0"></progress><p id="batteryTestStatus" class="text-xs muted">Chưa test.</p><div id="batteryChart"></div><div id="batterySamples"></div></article>
+</section>
+
+<section id="screen" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="screen"></div>
+  <article class="panel space-y-5">
+    <div class="flex justify-between items-center"><h3 class="panel-title">Màu toàn màn hình</h3><span class="text-xs muted"><kbd class="kbd kbd-xs">Space</kbd> <kbd class="kbd kbd-xs">←</kbd> <kbd class="kbd kbd-xs">→</kbd> đổi màu · <kbd class="kbd kbd-xs">Esc</kbd> thoát</span></div>
+    <div class="swatches"><button data-color="0" style="--swatch:#fff">Trắng</button><button data-color="1" style="--swatch:#000">Đen</button><button data-color="2" style="--swatch:#f00">Đỏ</button><button data-color="3" style="--swatch:#0f0">Xanh lá</button><button data-color="4" style="--swatch:#00f">Xanh dương</button><button data-color="5" style="--swatch:#808080">Xám</button><button data-color="6" class="grid-swatch">Lưới</button></div>
+    <div class="flex items-center gap-4 border-t border-base-300 pt-4"><button class="btn btn-sm btn-primary" id="autoPixels"><svg class="icon"><use href="#i-play"/></svg>Tự chạy màu test điểm chết</button><p id="pixelMarks" class="text-xs muted flex-1"></p><button class="btn btn-xs btn-ghost" id="clearPixelMarks">Xóa đánh dấu</button></div>
+    <p class="note"><svg class="icon"><use href="#i-info"/></svg>Màu đổi mỗi 3 giây; click vào vị trí nghi ngờ để ghi lại. App không tự phát hiện điểm chết.</p>
+  </article>
+  <div class="flex gap-2"><button class="btn btn-sm btn-quiet" data-tool="display">Cài đặt màn hình<svg class="icon"><use href="#i-external"/></svg></button><button class="btn btn-sm btn-ghost" data-goto="checklist">Ghi kết quả<svg class="icon"><use href="#i-arrow"/></svg></button></div>
+</section>
+
+<section id="input" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="input"></div>
+  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Bàn phím</h3><div class="flex items-center gap-2"><button class="btn btn-xs btn-ghost" id="clearKeys">Xóa dấu</button><button class="btn btn-sm btn-primary" id="keyboardToggle">Bắt đầu thử phím</button></div></div>
+    <div id="keyboard" class="outline-offset-4" tabindex="0" aria-label="Vùng kiểm tra bàn phím"></div>
+    <p class="text-xs"><span id="lastKey" class="muted">Chưa bật thử phím</span></p>
+    <p class="note"><svg class="icon"><use href="#i-info"/></svg>Fn, Power, phím Windows và phím media có thể do hệ điều hành giữ lại; hãy thử trực tiếp chức năng.</p></article>
+  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Touchpad / chuột</h3><span id="mouseStats" class="text-xs muted tabular">Trái: 0 · Giữa: 0 · Phải: 0 · Cuộn: 0</span></div><canvas id="pointerPad" aria-label="Kéo chuột để vẽ thử"></canvas></article>
+</section>
+
+<section id="media" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="media"></div>
+  <div class="flex items-end gap-3"><fieldset class="fieldset p-0 flex-1"><label class="fieldset-label" for="cameraSource">Camera</label><select id="cameraSource" class="select select-sm w-full"><option value="">Mặc định Windows</option></select></fieldset><fieldset class="fieldset p-0 flex-1"><label class="fieldset-label" for="micSource">Micro</label><select id="micSource" class="select select-sm w-full"><option value="">Mặc định Windows</option></select></fieldset><button id="refreshDevices" class="btn btn-sm btn-quiet"><svg class="icon"><use href="#i-refresh"/></svg>Dò lại</button></div>
+  <p id="mediaDeviceStatus" class="text-xs muted">Chưa dò thiết bị.</p>
+  <div class="grid grid-cols-2 gap-4">
+    <article class="panel space-y-3"><h3 class="panel-title flex items-center gap-2.5"><span class="icon-tile bg-blue-50 text-blue-600"><svg class="icon"><use href="#i-volume"/></svg></span>Loa</h3><p class="text-xs muted">Mỗi nút phát âm 1 giây ở một kênh.</p><div class="join"><button class="btn btn-sm btn-quiet join-item" id="leftSound">Trái</button><button class="btn btn-sm btn-quiet join-item" id="rightSound">Phải</button><button class="btn btn-sm btn-quiet join-item" id="stopSound">Dừng</button></div><button class="btn btn-xs btn-ghost" data-tool="sound">Thiết bị âm thanh<svg class="icon"><use href="#i-external"/></svg></button></article>
+    <article class="panel space-y-3"><h3 class="panel-title flex items-center gap-2.5"><span class="icon-tile bg-rose-50 text-rose-600"><svg class="icon"><use href="#i-mic"/></svg></span>Micro</h3><progress id="micLevel" class="progress h-1.5 w-full" max="100" value="0"></progress><p id="micStatus" class="text-xs muted">Chưa bật · bản ghi chỉ giữ trong RAM</p><div class="flex gap-2"><button class="btn btn-sm btn-primary" id="startMic">Ghi 5 giây</button><button class="btn btn-sm btn-quiet" id="stopMic" disabled>Dừng</button></div><audio id="micPlayback" controls class="w-full hidden"></audio><button class="btn btn-xs btn-ghost" data-tool="microphone">Quyền micro<svg class="icon"><use href="#i-external"/></svg></button></article>
+  </div>
+  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title flex items-center gap-2.5"><span class="icon-tile bg-violet-50 text-violet-600"><svg class="icon"><use href="#i-video"/></svg></span>Webcam</h3><div class="flex gap-2"><button class="btn btn-xs btn-ghost" data-tool="camera">Quyền camera<svg class="icon"><use href="#i-external"/></svg></button><button class="btn btn-sm btn-primary" id="startCamera">Bật camera</button><button class="btn btn-sm btn-quiet" id="stopCamera" disabled>Tắt</button></div></div><div class="camera-stage"><video id="cameraPreview" autoplay muted playsinline></video><p id="cameraStatus">Camera đang tắt</p></div></article>
+</section>
+
+<section id="diagnostics" class="page space-y-4">
+  <div class="page-summary grid sm:grid-cols-2 xl:grid-cols-4 gap-4" data-summary="diagnostics"></div>
+  <div class="grid grid-cols-3 gap-4">
+    <article class="panel flex flex-col gap-3"><div class="flex items-center gap-2"><span class="icon-tile bg-blue-50 text-blue-600"><svg class="icon"><use href="#i-cpu"/></svg></span><h3 class="panel-title">CPU</h3><span class="badge badge-sm bg-base-200 border-0 ml-auto">15 giây · 1 luồng</span></div><p class="text-xs muted flex-1">Tải nhẹ để quan sát treo, quạt và phản hồi.</p><button class="btn btn-sm btn-quiet" data-test="cpu">Chạy</button></article>
+    <article class="panel flex flex-col gap-3"><div class="flex items-center gap-2"><span class="icon-tile bg-violet-50 text-violet-600"><svg class="icon"><use href="#i-memory"/></svg></span><h3 class="panel-title">RAM</h3><span class="badge badge-sm bg-base-200 border-0 ml-auto">nhanh / sâu</span></div><p class="text-xs muted flex-1">Nhanh: 64 MiB, 4 mẫu. Sâu: 5 bài trên phần lớn RAM trống.</p><div class="flex gap-2"><button class="btn btn-sm btn-quiet flex-1" data-test="memory">Nhanh</button><select class="select select-sm w-24" data-mem-share aria-label="Lượng RAM thử sâu"><option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option></select><button class="btn btn-sm btn-primary flex-1" data-test="memoryDeep">Thử sâu</button></div></article>
+    <article class="panel flex flex-col gap-3"><div class="flex items-center gap-2"><span class="icon-tile bg-emerald-50 text-emerald-600"><svg class="icon"><use href="#i-drive"/></svg></span><h3 class="panel-title">Ổ đĩa</h3><span class="badge badge-sm bg-base-200 border-0 ml-auto">256 MiB – 16 GiB</span></div><p class="text-xs muted flex-1">Ghi tệp tạm lên ổ đã chọn, đo tốc độ ghi/đọc, so SHA-256 rồi xóa.</p><div class="flex gap-2"><select class="select select-sm flex-1 min-w-0" id="diskTarget" aria-label="Ổ cần thử"></select><select class="select select-sm w-28" data-disk-size aria-label="Dung lượng tệp thử"><option value="256">256 MiB</option><option value="1024">1 GiB</option><option value="4096">4 GiB</option><option value="8192">8 GiB</option><option value="16384">16 GiB</option></select><button class="btn btn-sm btn-quiet" data-test="disk">Chạy</button></div></article>
+  </div>
+  <article class="panel space-y-3"><div class="flex justify-between items-center"><h3 class="panel-title">Kết quả</h3><button class="btn btn-xs btn-ghost text-error" id="stopTest" disabled><svg class="icon"><use href="#i-stop"/></svg>Dừng</button></div><progress id="testProgress" class="progress h-1 w-full" max="100" value="0"></progress><p id="testStatus" class="text-xs muted">Chưa chạy bài thử.</p><div id="testResults"></div></article>
+  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Không thay thế Dell F12 Diagnostics. Không quét toàn bộ RAM hay mọi sector ổ đĩa.</p>
+</section>
+
+<section id="summary" class="page space-y-4">
+  <div id="runEmpty" class="panel text-center py-12"><span class="icon-tile size-12 mx-auto bg-primary/10 text-primary"><svg class="icon icon-lg"><use href="#i-chart"/></svg></span><p class="font-semibold mt-3">Chưa có lượt test nào</p><p class="text-xs muted mt-1">Bấm Test toàn bộ để chạy lần lượt các bài thử; kết quả sẽ thống kê tại đây.</p><button class="btn btn-sm btn-primary mt-4" id="runStart"><svg class="icon"><use href="#i-play"/></svg>Test toàn bộ</button></div>
+  <div id="runContent" class="space-y-4 hidden">
+    <div class="panel flex items-center gap-4"><div id="runVerdict" class="flex items-center gap-3 flex-1 min-w-0 [&amp;_.icon]:size-8"></div><button class="btn btn-sm btn-quiet" id="runAgain"><svg class="icon"><use href="#i-refresh"/></svg>Chạy lại</button><button class="btn btn-sm btn-primary" id="exportRun"><svg class="icon"><use href="#i-download"/></svg>Xuất báo cáo</button></div>
+    <div id="runStats" class="grid grid-cols-4 gap-3"></div>
+    <div id="runBar" class="flex h-2 rounded-full overflow-hidden gap-0.5"></div>
+    <div class="grid grid-cols-[1.5fr_1fr] gap-4 items-start">
+      <article class="panel p-0 overflow-hidden"><h3 class="panel-title px-5 py-3.5">Từng bước</h3><div class="border-t border-base-300"><table class="table table-sm"><tbody id="runSteps"></tbody></table></div></article>
+      <article class="panel"><h3 class="panel-title mb-2">Máy đã test</h3><div id="runMachine"></div><div class="border-t border-base-300 mt-2 pt-3 flex items-center justify-between gap-3"><p id="runChecklist" class="text-xs muted"></p><button class="btn btn-xs btn-quiet shrink-0" data-goto="checklist">Mở biên bản<svg class="icon"><use href="#i-arrow"/></svg></button></div></article>
+    </div>
+  </div>
+</section>
+
+<section id="checklist" class="page space-y-4">
+  <div class="flex items-center justify-between"><div id="checklistSummary" class="flex gap-4 text-sm"></div><button class="btn btn-sm btn-primary" id="exportBottom"><svg class="icon"><use href="#i-download"/></svg>Xuất biên bản HTML</button></div>
+  <article class="panel p-0 overflow-hidden"><div class="overflow-x-auto"><table class="table data-table"><thead><tr><th class="w-[42%]">Hạng mục</th><th class="w-[20%]">Kết quả</th><th>Ghi chú</th></tr></thead><tbody id="manualRows"></tbody></table></div></article>
+  <article class="panel space-y-2"><label class="panel-title block" for="notes">Thông tin mua máy</label><textarea id="notes" class="textarea w-full" rows="3" maxlength="20000" placeholder="Giá, người bán, cấu hình đã hứa, bảo hành / đổi trả…"></textarea><p class="note warn"><svg class="icon"><use href="#i-warn"/></svg>Báo cáo chứa Service Tag và thông tin phần cứng. Kiểm tra trước khi chia sẻ.</p></article>
+  <p class="note"><svg class="icon"><use href="#i-info"/></svg>Làm thêm trên máy Dell: F12 → Diagnostics (ghi mã lỗi), F2 → BIOS (Service Tag, Battery Health, AC Adapter, mật khẩu BIOS).</p>
+</section>
+</div>
+</main>
+</div>
+<div id="screenOverlay" class="hidden" tabindex="-1"><span id="screenHint">Space / ← → đổi màu · Esc thoát · click để ẩn hướng dẫn</span></div>
+<div id="toast" role="status" class="toast toast-end z-[2000] hidden"><div class="rounded-lg bg-neutral text-neutral-content text-sm px-4 py-2.5 shadow-lg max-w-md"><span id="toastText"></span></div></div>
+<script src="assessment.cjs"></script><script src="media-errors.cjs"></script><script src="renderer.js"></script></body></html>
